@@ -1,0 +1,8 @@
+# 使用 Redis 官方镜像
+FROM redis
+
+# 复制 Redis 配置文件到容器内
+COPY redis.conf /usr/local/etc/redis/redis.conf
+
+# 指定启动 Redis 时使用的配置文件
+CMD [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
