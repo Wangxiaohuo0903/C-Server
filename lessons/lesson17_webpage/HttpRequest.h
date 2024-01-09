@@ -127,31 +127,38 @@ private:
         return true;
     }
 
+    // 解析多部分表单数据，这通常用于文件上传请求
+    // @param boundary 分界符，用于识别请求主体中的不同部分
     void parseMultipartFormData(const std::string& boundary) {
         size_t pos = 0;
         size_t endPos = body.find(boundary, pos);
 
+        // 循环遍历请求主体中的每个部分
         while (endPos != std::string::npos) {
             std::string part = body.substr(pos, endPos - pos - 2);
-            parsePart(part);
+            parsePart(part); // 解析单个部分
             pos = endPos + boundary.length() + 2;
             endPos = body.find(boundary, pos);
         }
     }
 
+    // 解析请求主体的单个部分，提取文件内容或表单字段
+    // @param part 请求主体中的一个部分
     void parsePart(const std::string& part) {
         std::istringstream iss(part);
         std::string line;
         std::string name;
-        std::string filename;  // 新增变量，用于存储文件名
-        bool isFile = false;
+        std::string filename; // 存储文件名
+        bool isFile = false;  // 标记部分是否为文件
 
+        // 逐行读取部分内容，解析出文件名和表单字段名
         while (std::getline(iss, line) && line != "\r") {
             size_t pos = line.find(": ");
             if (pos != std::string::npos) {
                 std::string key = line.substr(0, pos);
                 std::string value = line.substr(pos + 2);
                 if (key == "Content-Disposition") {
+                    // 解析表单字段名和文件名
                     size_t namePos = value.find("name=\"");
                     size_t filenamePos = value.find("filename=\"");
                     if (namePos != std::string::npos) {
@@ -160,7 +167,7 @@ private:
                         name = value.substr(namePos, nameEnd - namePos);
                     }
                     if (filenamePos != std::string::npos) {
-                        filenamePos += 10;  // 跳过 "filename=\""
+                        filenamePos += 10;
                         size_t filenameEnd = value.find("\"", filenamePos);
                         filename = value.substr(filenamePos, filenameEnd - filenamePos);
                         isFile = true;
@@ -169,19 +176,16 @@ private:
             }
         }
 
+        // 根据是否为文件来处理提取的内容
         std::string content = part.substr(iss.tellg());
         content.erase(0, content.find_first_not_of("\r\n"));
         if (isFile) {
-            fileContents[name] = content;
-            fileNames[name] = filename;  // 存储文件名
+            fileContents[name] = content; // 存储文件内容
+            fileNames[name] = filename;    // 存储文件名
         } else {
-            formFields[name] = content;
+            formFields[name] = content;    // 存储表单字段值
         }
     }
-
-
-
-
 
     std::string getBoundary(const std::string& contentType) const {
         size_t pos = contentType.find("boundary=");

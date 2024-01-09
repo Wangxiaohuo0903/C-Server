@@ -47,34 +47,38 @@ void setupRoutes() {
 
 // 第六课新增，解析HTTP请求
 std::pair<std::string, std::string> parseHttpRequest(const std::string& request) {
-    // 解析请求方法和URI
+    // 找到第一个空格，确定HTTP方法的结束位置
     size_t method_end = request.find(" ");
+    // 提取HTTP方法（如GET、POST）
     std::string method = request.substr(0, method_end);
+
+    // 找到第二个空格，确定URI的结束位置
     size_t uri_end = request.find(" ", method_end + 1);
+    // 提取URI（统一资源标识符）
     std::string uri = request.substr(method_end + 1, uri_end - method_end - 1);
 
-    // 提取请求体（对于POST请求）
-    std::string body;
-    if (method == "POST") {
-        size_t body_start = request.find("\r\n\r\n");
-        if (body_start != std::string::npos) {
-            body = request.substr(body_start + 4);
-        }
-    }
-
+    // 返回解析出的HTTP方法和URI
     return {method, uri};
 }
 
-// 第六课新增，处理HTTP请求
+// 处理HTTP请求
 std::string handleHttpRequest(const std::string& method, const std::string& uri, const std::string& body) {
+    // 检查GET请求和URI是否在路由表中
     if (method == "GET" && get_routes.count(uri) > 0) {
+        // 根据URI调用相应的处理函数
         return get_routes[uri](body);
-    } else if (method == "POST" && post_routes.count(uri) > 0) {
+    }
+    // 检查POST请求和URI是否在路由表中
+    else if (method == "POST" && post_routes.count(uri) > 0) {
+        // 根据URI调用相应的处理函数
         return post_routes[uri](body);
-    } else {
+    }
+    // 如果请求方法和URI不匹配任何路由，则返回404错误
+    else {
         return "404 Not Found";
     }
 }
+
 
 int main() {
     int server_fd, new_socket;

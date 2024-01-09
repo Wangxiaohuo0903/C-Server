@@ -1,38 +1,34 @@
-#ifndef LOG_H
-#define LOG_H
-
-#include <iostream>
-#include <string>
+// Logger.h
 #include <fstream>
+#include <string>
+#include <chrono>
+#include <ctime>
 
-// 定义一个简单的日志系统
-class Logger {
-public:
-    Logger() {
-        log_file.open("server.log", std::ios::app); // 打开日志文件
-    }
-
-    ~Logger() {
-        if (log_file.is_open()) {
-            log_file.close(); // 关闭日志文件
-        }
-    }
-
-    void log(const std::string& level, const std::string& message) {
-        log_file << level << ": " << message << std::endl;
-        std::cout << level << ": " << message << std::endl; // 同时输出到控制台
-    }
-
-private:
-    std::ofstream log_file;
+enum LogLevel {
+    INFO,
+    WARNING,
+    ERROR
 };
 
-// 全局日志对象
-extern Logger global_logger;
+class Logger {
+public:
+    static void logMessage(LogLevel level, const std::string& message) {
+        std::ofstream logFile("server.log", std::ios::app);
+        auto now = std::chrono::system_clock::now();
+        auto now_c = std::chrono::system_clock::to_time_t(now);
+        std::string levelStr;
 
-// 日志宏
-#define LOG_INFO(message) global_logger.log("INFO", message)
-#define LOG_ERROR(message) global_logger.log("ERROR", message)
-#define LOG_WARN(message) global_logger.log("WARN", message)
+        switch (level) {
+            case INFO: levelStr = "INFO"; break;
+            case WARNING: levelStr = "WARNING"; break;
+            case ERROR: levelStr = "ERROR"; break;
+        }
 
-#endif // LOG_H
+        logFile << std::ctime(&now_c) << " [" << levelStr << "] " << message << std::endl;
+        logFile.close();
+    }
+};
+
+#define LOG_INFO(message) Logger::logMessage(INFO, message)
+#define LOG_WARNING(message) Logger::logMessage(WARNING, message)
+#define LOG_ERROR(message) Logger::logMessage(ERROR, message)

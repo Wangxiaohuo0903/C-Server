@@ -1,21 +1,21 @@
-#include <iostream>
-#include <map>
-#include <functional>
-#include <string>
-#include <sys/socket.h>
-#include <stdlib.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <unistd.h>
+#include <iostream>  // 引入标准输入输出库
+#include <map>       // 引入标准映射容器库
+#include <functional>// 引入函数对象库，用于定义函数类型
+#include <string>    // 引入字符串处理库
+#include <sys/socket.h> // 引入socket编程接口
+#include <stdlib.h>  // 引入标准库，用于通用工具函数
+#include <netinet/in.h> // 引入网络字节序转换函数
+#include <string.h>  // 引入字符串处理函数
+#include <unistd.h>  // 引入UNIX标准函数库
+
 
 // 测试命令 curl http://localhost:8081/register
-#define PORT 8080
+#define PORT 8080  // 定义监听端口号为8080
 
-// 请求处理函数类型定义
-using RequestHandler = std::function<std::string(const std::string&)>;
+using RequestHandler = std::function<std::string(const std::string&)>; // 定义请求处理函数类型
 
-// 路由表
-std::map<std::string, RequestHandler> route_table;
+std::map<std::string, RequestHandler> route_table; // 定义路由表，映射路径到对应的处理函数
+
 
 // 初始化路由表
 void setupRoutes() {
@@ -40,49 +40,49 @@ void setupRoutes() {
 }
 
 int main() {
-    int server_fd, new_socket;
-    struct sockaddr_in address;
-    int addrlen = sizeof(address);
+    int server_fd, new_socket; // 声明服务器socket和新连接的socket
+    struct sockaddr_in address; // 声明网络地址结构
+    int addrlen = sizeof(address); // 获取地址结构的长度
 
     // 创建socket
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
 
-    // 定义地址
-    address.sin_family = AF_INET; // 使用IPv4地址
-    address.sin_addr.s_addr = INADDR_ANY; // 绑定到所有网络接口
-    address.sin_port = htons(PORT); // 设置端口号
+    // 定义服务器地址
+    address.sin_family = AF_INET;         // 设置地址族为IPv4
+    address.sin_addr.s_addr = INADDR_ANY; // 绑定到所有可用网络接口
+    address.sin_port = htons(PORT);       // 设置服务器端口号
 
-    // 绑定socket
+    // 将socket绑定到地址
     bind(server_fd, (struct sockaddr *)&address, sizeof(address));
 
-    // 监听请求
+    // 监听端口上的网络请求
     listen(server_fd, 3);
 
-    // 设置路由
+    // 初始化路由表
     setupRoutes();
 
     while (true) {
-        // 接受连接
+        // 接受来自客户端的连接
         new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
 
-        // 读取请求
+        // 读取客户端的请求数据
         char buffer[1024] = {0};
         read(new_socket, buffer, 1024);
         std::string request(buffer);
         
-        // 解析URI
+        // 解析请求的URI
         std::string uri = request.substr(request.find(" ") + 1);
         uri = uri.substr(0, uri.find(" "));
 
-        // 根据路由表处理请求
+        // 根据路由表处理请求并生成响应
         std::string response_body;
         if (route_table.count(uri) > 0) {
             response_body = route_table[uri](request);
         } else {
-            response_body = "404 Not Found"; // 未找到对应路径时的响应
+            response_body = "404 Not Found";
         }
 
-        // 发送响应
+        // 向客户端发送HTTP响应
         std::string response = "HTTP/1.1 200 OK\nContent-Type: text/plain\n\n" + response_body;
         send(new_socket, response.c_str(), response.size(), 0);
 
