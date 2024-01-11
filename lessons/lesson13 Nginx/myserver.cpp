@@ -13,6 +13,9 @@
 #include <sstream>
 #include "Logger.h"
 #include "Database.h"
+#include "ThreadPool.h"
+#include "HttpRequest.h"
+#include "HttpResponse.h"
 
 #define PORT 8080
 #define MAX_EVENTS 10
@@ -24,6 +27,7 @@ std::map<std::string, RequestHandler> post_routes;
 Database db("users.db");
 
 
+// 第八课新增：解析请求正文的辅助函数
 std::string urlDecode(const std::string &s) {
     std::string decoded;
     std::istringstream iss(s);
@@ -51,7 +55,7 @@ std::map<std::string, std::string> parseFormBody(const std::string& body) {
     std::istringstream stream(body);
     std::string pair;
 
-    LOG_INFO("Parsing body: " + body);  // 记录原始body数据
+    // LOG_INFO("Parsing body: " + body);  // 记录原始body数据
 
     while (std::getline(stream, pair, '&')) {
         std::string::size_type pos = pair.find('=');
@@ -60,7 +64,7 @@ std::map<std::string, std::string> parseFormBody(const std::string& body) {
             std::string value = pair.substr(pos + 1);
             params[key] = value;
 
-            LOG_INFO("Parsed key-value pair: " + key + " = " + value);  // 记录每个解析出的键值对
+            // LOG_INFO("Parsed key-value pair: " + key + " = " + value);  // 记录每个解析出的键值对
         } else {
             // 错误处理：找不到 '=' 分隔符
             std::string error_msg = "Error parsing: " + pair;
@@ -120,7 +124,7 @@ void setupRoutes() {
      // TODO: 添加其他路径和处理函数
 }
 
-
+// 第六课新增，解析HTTP请求
 std::tuple<std::string, std::string, std::string> parseHttpRequest(const std::string& request) {
     LOG_INFO("Parsing HTTP request");  // 第七课新增：记录请求解析
     // 解析请求方法和URI
@@ -143,7 +147,7 @@ std::tuple<std::string, std::string, std::string> parseHttpRequest(const std::st
 
 
 
-
+// 第六课新增，处理HTTP请求
 std::string handleHttpRequest(const std::string& method, const std::string& uri, const std::string& body) {
     LOG_INFO("Handling HTTP request for URI: " + uri);  // 第七课新增：记录请求处理
     if (method == "GET" && get_routes.count(uri) > 0) {
@@ -158,21 +162,20 @@ std::string handleHttpRequest(const std::string& method, const std::string& uri,
 
 
 
-//第九课新增
+
 void setNonBlocking(int sock) {
     int opts;
-    opts = fcntl(sock, F_GETFL); // 获取socket的文件描述符当前的状态标志
+    opts = fcntl(sock, F_GETFL);
     if (opts < 0) {
-        LOG_ERROR("fcntl(F_GETFL)"); // 获取标志失败，记录错误日志
+        LOG_ERROR("fcntl(F_GETFL)");
         exit(EXIT_FAILURE);
     }
-    opts = (opts | O_NONBLOCK); // 设置非阻塞标志
-    if (fcntl(sock, F_SETFL, opts) < 0) { // 应用新的标志设置到socket
-        LOG_ERROR("fcntl(F_SETFL)"); // 设置失败，记录错误日志
+    opts = (opts | O_NONBLOCK);
+    if (fcntl(sock, F_SETFL, opts) < 0) {
+        LOG_ERROR("fcntl(F_SETFL)");
         exit(EXIT_FAILURE);
     }
 }
-
 
 int main() {
     int server_fd, new_socket;
@@ -182,61 +185,81 @@ int main() {
     int epollfd, nfds;
 
     // 创建socket
-    server_fd = socket(AF_INET, SOCK_STREAM, 0); // 创建TCP socket
-    setNonBlocking(server_fd); // 设置为非阻塞模式
+    server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    setNonBlocking(server_fd); // 设置非阻塞
     LOG_INFO("Socket created");
 
     // 定义地址
-    address.sin_family = AF_INET; // 指定地址族为IPv4
-    address.sin_addr.s_addr = INADDR_ANY; // 绑定到所有可用地址
-    address.sin_port = htons(PORT); // 指定端口号
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
 
     // 绑定socket
-    bind(server_fd, (struct sockaddr *)&address, sizeof(address)); // 绑定socket到指定地址和端口
+    bind(server_fd, (struct sockaddr *)&address, sizeof(address));
 
     // 监听请求
-    listen(server_fd, 3); // 开始监听端口，设置最大监听队列长度为3
+    listen(server_fd, 3);
     LOG_INFO("Server listening on port " + std::to_string(PORT));
 
-     // 设置路由
+    // 创建epoll实例
+    epollfd = epoll_create1(0);
+    if (epollfd == -1) {
+        LOG_ERROR("epoll_create1");
+        exit(EXIT_FAILURE);
+    }
+
+    ev.events = EPOLLIN | EPOLLET; // 监听读事件和边缘触发
+    ev.data.fd = server_fd;
+    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, server_fd, &ev) == -1) {
+        LOG_ERROR("epoll_ctl: server_fd");
+        exit(EXIT_FAILURE);
+    }
+
+    // 设置路由
     setupRoutes();
     LOG_INFO("Server starting");
 
-    // 创建epoll实例
-    epollfd = epoll_create1(0); // 创建epoll实例
-    if (epollfd == -1) {
-        LOG_ERROR("epoll_create -1"); // 创建失败，记录错误日志
-        exit(EXIT_FAILURE);
-    }
 
-    ev.events = EPOLLIN | EPOLLET; // 设置要监听的事件类型：可读和边缘触发
-    ev.data.fd = server_fd;
-    if (epoll_ctl(epollfd, EPOLL_CTL_ADD, server_fd, &ev) == -1) {
-        LOG_ERROR("epoll_ctl: server_fd"); // 注册事件失败，记录错误日志
-        exit(EXIT_FAILURE);
-    }
+    ThreadPool pool(4); // 创建含有4个线程的线程池
+    LOG_INFO("Thread pool created with 4 threads");
 
-    // 事件循环
     while (true) {
-        nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1); // 等待事件发生
+        nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
         for (int n = 0; n < nfds; ++n) {
             if (events[n].data.fd == server_fd) {
                 // 处理新连接
                 new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
-                setNonBlocking(new_socket); // 设置新连接为非阻塞模式
-                ev.events = EPOLLIN | EPOLLET; // 监听新连接的可读事件和边缘触发
+                if (new_socket == -1) {
+                    LOG_ERROR("Error accepting new connection");
+                    continue;
+                }
+
+                setNonBlocking(new_socket);
+                ev.events = EPOLLIN | EPOLLET;
                 ev.data.fd = new_socket;
                 if (epoll_ctl(epollfd, EPOLL_CTL_ADD, new_socket, &ev) == -1) {
-                    LOG_ERROR("epoll_ctl: new_socket"); // 注册新连接事件失败，记录错误日志
-                    exit(EXIT_FAILURE);
+                    LOG_ERROR("Error adding new socket to epoll");
+                    close(new_socket);
+                } else {
+                    LOG_INFO("New connection accepted, socket added to epoll");
                 }
             } else {
-                // TODO:处理已连接socket的IO事件
-
-                // ... (读取请求，处理请求，发送响应) ...
+                // 将任务加入线程池
+                pool.enqueue([fd = events[n].data.fd]() {
+                    LOG_INFO("Handling request on socket: " + std::to_string(fd));
+                    char buffer[1024] = {0};
+                    read(fd, buffer, 1024);
+                    std::string request(buffer);
+                    auto [method, uri, body] = parseHttpRequest(request);
+                    std::string response_body = handleHttpRequest(method, uri, body);
+                    std::string response = "HTTP/1.1 200 OK\nContent-Type: text/plain\n\n" + response_body;
+                    send(fd, response.c_str(), response.size(), 0);
+                    close(fd);
+                    LOG_INFO("Request handled and response sent on socket: " + std::to_string(fd));
+                });
+                LOG_INFO("Task added to thread pool for socket: " + std::to_string(events[n].data.fd));
             }
         }
     }
-
     return 0;
 }
