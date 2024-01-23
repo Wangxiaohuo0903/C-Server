@@ -71,7 +71,7 @@ std::pair<std::string, std::string> parseHttpRequest(const std::string& request)
 
 // 第六课新增，处理HTTP请求
 std::string handleHttpRequest(const std::string& method, const std::string& uri, const std::string& body) {
-    LOG_INFO("Handling HTTP request for URI: " + uri);  // 第七课新增：记录请求处理
+    LOG_INFO("Handling HTTP request for URI: %s",uri.c_str());  // 第七课新增：记录请求处理
     if (method == "GET" && get_routes.count(uri) > 0) {
         return get_routes[uri](body);
     } else if (method == "POST" && post_routes.count(uri) > 0) {
@@ -100,12 +100,12 @@ int main() {
 
     // 监听请求
     listen(server_fd, 3);
-    LOG_INFO("Server listening on port " + std::to_string(PORT));  // 第七课新增：记录服务器监听
+    LOG_INFO("Server listening on port %s", std::to_string(PORT).c_str());  // 第七课新增：记录服务器监听
 
 
     // 设置路由
     setupRoutes();
-    LOG_INFO("Server starting");
+    LOG_INFO("Server starting ");
     while (true) {
         // 接受连接
         new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
