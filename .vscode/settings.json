@@ -72,6 +72,7 @@
         "future": "cpp",
         "queue": "cpp",
         "regex": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "charconv": "cpp"
     }
 }

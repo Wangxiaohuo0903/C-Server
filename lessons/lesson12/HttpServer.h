@@ -42,14 +42,24 @@ public:
 
     // 12新增
     std::string readFile(const std::string& filePath) {
-        std::ifstream file(filePath);
-        if (!file.is_open()) {
-            return "Error: Unable to open file " + filePath;
-        }
-        std::stringstream buffer;
-        buffer << file.rdbuf();
-        return buffer.str();
+    // 使用标准库中的ifstream打开文件
+    std::ifstream file(filePath);
+
+    // 判断文件是否成功打开
+    if (!file.is_open()) {
+        // 若未能成功打开文件，返回错误信息
+        return "Error: Unable to open file " + filePath;
     }
+
+    // 使用stringstream来读取文件内容
+    std::stringstream buffer;
+    // 将文件内容读入到stringstream中
+    buffer << file.rdbuf();
+
+    // 将读取的内容转换为字符串并返回
+    return buffer.str();
+}
+
 
     void setupRoutes() {
         router.addRoute("GET", "/", [](const HttpRequest& req) {
