@@ -7,17 +7,17 @@
 #include <future>
 #include <atomic>
 #include <chrono>
-#include <iostream>
 
 class ThreadPool {
 public:
     ThreadPool(size_t minThreads, size_t maxThreads, std::chrono::milliseconds idleTime = std::chrono::milliseconds(10000))
         : stop(false), minThreads(minThreads), maxThreads(maxThreads), idleTime(idleTime), activeThreads(0) {
         workers.reserve(maxThreads);
-        local_tasks.resize(maxThreads);
         for (size_t i = 0; i < minThreads; ++i) {
-            addThread(i);
+            addThread();
         }
+        // 启动后台管理线程，用于调整线程池中的线程数量
+        managementThread = std::thread(&ThreadPool::manageThreads, this);
     }
 
     ~ThreadPool() {
@@ -30,6 +30,9 @@ public:
             if(worker.joinable()) {
                 worker.join();
             }
+        }
+        if (managementThread.joinable()) {
+            managementThread.join();
         }
     }
 
@@ -50,67 +53,56 @@ public:
                 throw std::runtime_error("enqueue on stopped ThreadPool");
             }
 
-            global_tasks.emplace_back([task]() { (*task)(); });
-
-            // 动态增加线程的逻辑
-            if (global_tasks.size() > activeThreads && activeThreads < maxThreads) { 
-                addThread(activeThreads); // 传递新线程的索引
-            }
+            tasks.emplace_back([task]() { (*task)(); });
         }
         condition.notify_one();
         return res;
     }
 
 private:
-    std::atomic<bool> stop;
-    size_t minThreads, maxThreads;
-    std::chrono::milliseconds idleTime;
-    std::atomic<size_t> activeThreads;
+    std::vector<std::thread> workers;
+    std::deque<std::function<void()>> tasks;
     std::mutex queue_mutex;
     std::condition_variable condition;
-    std::deque<std::function<void()>> global_tasks;
-    std::vector<std::deque<std::function<void()>>> local_tasks;
-    std::vector<std::thread> workers;
+    std::atomic<bool> stop;
+    std::atomic<size_t> minThreads, maxThreads;
+    std::chrono::milliseconds idleTime;
+    std::atomic<size_t> activeThreads;
+    std::thread managementThread;
 
-    void addThread(size_t workerId) {
-        workers.emplace_back([this, workerId] {
-            while (true) {
-                bool hasTask = false;
+    void addThread() {
+        workers.emplace_back([this] {
+            for(;;) {
                 std::function<void()> task;
-                
                 {
                     std::unique_lock<std::mutex> lock(this->queue_mutex);
-                    this->condition.wait_for(lock, this->idleTime, [this, workerId] {
-                        return this->stop || !this->global_tasks.empty() || !this->local_tasks[workerId].empty();
+                    this->condition.wait(lock, [this]{
+                        return this->stop || !this->tasks.empty();
                     });
-
-                    if (this->stop && this->global_tasks.empty() && this->local_tasks[workerId].empty()) {
-                        // 检查是否可以减少线程
-                        if (activeThreads.load() > minThreads) {
-                            --activeThreads;
-                            return;
-                        } else {
-                            continue; // 继续等待任务或停止信号
-                        }
-                    }
-
-                    if (!this->local_tasks[workerId].empty()) {
-                        task = std::move(this->local_tasks[workerId].front());
-                        this->local_tasks[workerId].pop_front();
-                        hasTask = true;
-                    } else if (!this->global_tasks.empty()) {
-                        task = std::move(this->global_tasks.front());
-                        this->global_tasks.pop_front();
-                        hasTask = true;
-                    }
+                    if(this->stop && this->tasks.empty()) return;
+                    task = std::move(this->tasks.front());
+                    this->tasks.pop_front();
                 }
-
-                if (hasTask) {
-                    task();
-                }
+                task();
             }
         });
-
         ++activeThreads;
+    }
+
+    // 后台管理线程函数，用于动态调整线程数量
+    void manageThreads() {
+        while (!stop) {
+            std::this_thread::sleep_for(idleTime);
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            // 根据当前任务数量和活跃线程数动态增减线程
+            if (tasks.empty() && activeThreads > minThreads) {
+                --activeThreads; // 减少一个线程
+                condition.notify_one(); // 通知一个线程退出
+                continue;
+            }
+            if (tasks.size() > activeThreads && activeThreads < maxThreads) {
+                addThread(); // 增加一个新线程
+            }
+        }
     }
 };

@@ -119,6 +119,8 @@ void handleConnection(int fd) {
             HttpResponse response = router.routeRequest(request);
             if (keepAlive) {
                 response.setHeader("Connection", "keep-alive");
+            } else {
+                response.setHeader("Connection", "close");
             }
             if (request.acceptsGzip()) {
                 response.compressBody();
