@@ -1,0 +1,3716 @@
+Wed Feb 14 08:34:17 2024
+ [INFO] Routes setup completed.
+Wed Feb 14 08:34:17 2024
+ [INFO] Routes setup completed.
+Wed Feb 14 08:34:28 2024
+ [INFO] Accepted new connection, fd: 6
+Wed Feb 14 08:34:28 2024
+ [INFO] SSL object created and set for fd: 6
+Wed Feb 14 08:34:28 2024
+ [INFO] Added SSL object for fd: 6 to map
+Wed Feb 14 08:34:28 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:34:28 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:34:28 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:34:28 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:34:28 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:34:28 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:34:28 2024
+ [INFO] Registration failed for user: 1fo1o 
+Wed Feb 14 08:34:28 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:34:44 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:34:44 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:34:44 2024
+ [ERROR] SSL_read failed for fd: 6 with SSL error: 1
+Wed Feb 14 08:34:44 2024
+ [INFO] Removed SSL object for fd: 6 from map
+Wed Feb 14 08:34:51 2024
+ [INFO] Accepted new connection, fd: 6
+Wed Feb 14 08:34:51 2024
+ [INFO] SSL object created and set for fd: 6
+Wed Feb 14 08:34:51 2024
+ [INFO] Added SSL object for fd: 6 to map
+Wed Feb 14 08:34:51 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:34:51 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:34:51 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:34:51 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:34:51 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:34:51 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:34:51 2024
+ [INFO] User registered: 1sfo1o with password: bar
+Wed Feb 14 08:34:51 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:35:00 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:35:00 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:35:00 2024
+ [ERROR] SSL_read failed for fd: 6 with SSL error: 1
+Wed Feb 14 08:35:00 2024
+ [INFO] Removed SSL object for fd: 6 from map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 6
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 6
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 6 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 7
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 7
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 7 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 8
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 8
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 8 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 9
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 9
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 9 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 10
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 10
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 10 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 11
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 11
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 11 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 12
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 12
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 12 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 13
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 13
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 13 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 14
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 14
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 14 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 15
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 15
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 15 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 16
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 16
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 16 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 17
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 17
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 17 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 18
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 18
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 18 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 21
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 21
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 21 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 22
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 22
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 22 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 23
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 23
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 23 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 25
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 25
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 25 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 26
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 26
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 26 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 27
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 27
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 27 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 28
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 28
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 28 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 29
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 29
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 29 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 30
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 30
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 30 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 31
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 31
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 31 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 32
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 32
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 32 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 33
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 33
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 33 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 34
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 34
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 34 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 35
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 35
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 35 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 36
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 36
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 36 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 37
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 37
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 37 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 38
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 38
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 38 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 39
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 39
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 39 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 40
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 40
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 40 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 41
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 41
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 41 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 42
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 42
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 42 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 43
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 43
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 43 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 44
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 44
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 44 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 45
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 45
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 45 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 46
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 46
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 46 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 47
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 47
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 47 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 48
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 48
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 48 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 49
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 49
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 49 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 50
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 50
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 50 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 51
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 51
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 51 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 52
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 52
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 52 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 53
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 53
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 53 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 54
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 54
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 54 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 55
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 55
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 55 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 56
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 56
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 56 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 57
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 57
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 57 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 58
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 58
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 58 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 59
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 59
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 59 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 60
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 60
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 60 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 61
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 61
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 61 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 62
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 62
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 62 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 63
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 63
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 63 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 64
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 64
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 64 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 65
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 65
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 65 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 66
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 66
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 66 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 67
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 67
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 67 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 68
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 68
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 68 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 69
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 69
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 69 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 70
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 70
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 70 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 71
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 71
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 71 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 72
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 72
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 72 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 73
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 73
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 73 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 74
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 74
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 74 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 75
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 75
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 75 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 76
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 76
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 76 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 77
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 77
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 77 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 78
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 78
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 78 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 79
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 79
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 79 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 80
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 80
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 80 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 81
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 81
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 81 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 82
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 82
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 82 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 83
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 83
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 83 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 84
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 84
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 84 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 85
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 85
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 85 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 86
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 86
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 86 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 87
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 87
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 87 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 88
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 88
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 88 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 89
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 89
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 89 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 90
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 90
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 90 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 91
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 91
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 91 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 92
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 92
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 92 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 93
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 93
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 93 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 94
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 94
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 94 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 95
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 95
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 95 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 96
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 96
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 96 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 97
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 97
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 97 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 98
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 98
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 98 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 99
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 99
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 99 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 100
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 100
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 100 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 101
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 101
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 101 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 102
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 102
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 102 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 103
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 103
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 103 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 104
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 104
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 104 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 105
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 105
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 105 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 106
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 106
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 106 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 107
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 107
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 107 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Accepted new connection, fd: 108
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL object created and set for fd: 108
+Wed Feb 14 08:37:06 2024
+ [INFO] Added SSL object for fd: 108 to map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 10
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 11
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 9
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 10 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 11 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 9 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 12
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 13
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 12 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 13 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 14
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 8
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 7
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 16
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 15
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 17
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 18
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 14 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 21
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 7 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 17 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 18 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 15 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 21 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 16 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 8 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 22
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 23
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 22 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 23 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 25
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 26
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 27
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 28
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 29
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 27 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 26 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 30
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 28 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 25 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 31
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 29 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 32
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 33
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 34
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 31 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 32 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 30 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 35
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 36
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 33 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 34 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 37
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 38
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 35 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 36 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 37 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 39
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 39 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 38 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 40
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 41
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 42
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 43
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 41 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 42 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 40 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 44
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 44 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 43 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 45
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 46
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 47
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 48
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 47 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 49
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 45 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 46 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 50
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 51
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 49 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 51 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 50 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 48 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 52
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 53
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 54
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 55
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 56
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 57
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 53 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 52 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 55 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 57 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 56 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 58
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 59
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 60
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 59 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 58 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 61
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 62
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 61 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 62 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 54 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 63
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 64
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 65
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 66
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 63 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 67
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 68
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 66 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 65 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 67 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 60 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 68 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 64 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 69
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 70
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 71
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 72
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 73
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 74
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 75
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 76
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 77
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 69 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 71 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 73 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 72 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 78
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 80
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 79
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 81
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 82
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 83
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 84
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 76 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 85
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 78 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 75 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 80 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 79 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 81 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 82 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 83 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 84 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 86
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 87
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 88
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 87 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 70 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 85 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 86 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 89
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 90
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 91
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 74 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 77 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 89 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 90 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 88 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 92
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 92 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 91 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 93
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 93 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 94
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 94 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 95
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 95 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 96
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 96 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 97
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 97 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 98
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 98 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 99
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 99 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 100
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 100 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 101
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 101 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 102
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 102 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 103
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 103 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 104
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 104 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 105
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 105 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 106
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 106 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 107
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 107 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 108
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 108 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 10
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 10 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 13
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 13 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 9
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 9 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 11
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 11 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 12
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 12 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 8
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 8 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 7
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 7 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 23
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 15
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 22
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 23 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 15 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 22 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 18
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 18 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 14
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 14 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 21
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 16
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 21 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 16 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 27
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 17
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 27 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 17 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 13
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 26
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 25
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 13 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 26 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 28
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 25 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 31
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 29
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 32
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 30
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 29 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 32 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 30 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 15
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 33
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 28 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 33 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 15 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 31 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 9
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 34
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 9 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 34 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 11
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 36
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 12
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 35
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 12 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 11 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 35 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 8
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 8 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 36 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 37
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 37 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 7
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 39
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 38
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 41
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 38 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 7 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 39 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 41 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 40
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 40 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 42
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 44
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 43
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 42 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 43 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 64
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 45
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 64 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 18
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 45 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 18 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 47
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 47 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 62
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 46
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 59
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 51
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 62 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 46 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 44 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 14
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 49
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 61
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 50
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 54
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 59 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 50 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 48
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 58
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 55
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 54 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 61 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 63
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 14 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 48 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 51 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 63 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 52
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 58 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 49 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 55 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 66
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 65
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 53
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 67
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 57
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 60
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 56
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 89
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 88
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 90
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 91
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 92
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 93
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 72
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 94
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 68
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 69
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 95
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 71
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 96
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 66 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 73
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 97
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 67 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 65 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 53 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 103
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 104
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 106
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 98
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 99
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 105
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 101
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 107
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 100
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 108
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 102
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 10
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 17
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 78
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 76
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 82
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 79
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 80
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 83
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 81
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 75
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 84
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 87
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 70
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 86
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 85
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 52 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 56 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 57 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 89 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 60 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 74
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 77
+Wed Feb 14 08:37:06 2024
+ [INFO] Handling connection for fd: 16
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 88 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 90 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 91 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 92 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 93 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 72 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 94 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 68 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 69 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 95 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 71 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 96 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 73 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 97 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 103 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 104 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 106 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 98 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 105 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 99 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 107 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 100 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 101 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 108 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 102 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 10 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 17 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 78 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 76 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 82 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 79 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 80 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 83 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 81 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 75 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 84 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 87 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 70 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 86 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 85 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 74 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 16 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Found SSL object for fd: 77 in map
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:37:06 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:06 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:37:06 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 67
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 67 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 67 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 38
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 47
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 38 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 47 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 38 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 55
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 67 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 69
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 55 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 55 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 55 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 69 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 69 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 47 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 38 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 56
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 56 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 56 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 57
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 60
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 6 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 58
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 64
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 59
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 60 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 60 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 66
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 58 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 58 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 57 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 57 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 64 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 36
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 64 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 47 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 61
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 10
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 66 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 36 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 36 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 56 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 61 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 58 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 59 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 57 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 66 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 66 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 64 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 60 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 68
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 69 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 10 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 10 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 10 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 68 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 68 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 68 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 63
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 36 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 61 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 61 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 63 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 63 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 63 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 9
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 65
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 75
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 97
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 8
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 106
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 71
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 59 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 59 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 9 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 75 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 75 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 75 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 6 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 8 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 8 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 8 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 106 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 106 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 106 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 71 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 65 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 65 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 65 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 9 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 9 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 97 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 97 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 97 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 71 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 71 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 72
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 73
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 78
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 73 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 13
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 73 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 72 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 72 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 76
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 14
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 77
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 12
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 85
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 40
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 15
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 78 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 72 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 13 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 13 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 13 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 14 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 14 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 14 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 77 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 77 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 77 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 12 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 12 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 12 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 83
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 83 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 83 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 85 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 85 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 73 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 85 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 40 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 15 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 15 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 40 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 40 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 83 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 15 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 76 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 76 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 76 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 78 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 78 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 86
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 88
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 18
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 31
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 89
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 92
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 21
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 91
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 22
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 32
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 23
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 25
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 94
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 95
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 39
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 32 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 23 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 23 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 23 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 25 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 86 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 94 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 94 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 94 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 95 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 95 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 95 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 39 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 39 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 39 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 18 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 18 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 89 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 92 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 89 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 92 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 21 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 21 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 18 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 89 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 92 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 91 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 22 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 25 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 25 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 32 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 32 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 86 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 86 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 88 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 88 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 88 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 31 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 31 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 31 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 21 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 91 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 91 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 96
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 26
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 98
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 42
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 27
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 22 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 22 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 35
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 27 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 27 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 99
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 100
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 28
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 101
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 103
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 99 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 99 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 26 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 26 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 26 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 96 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 96 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 96 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 27 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 99 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 35 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 35 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 35 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 100 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 100 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 100 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 28 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 28 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 28 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 101 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 101 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 101 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 103 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 98 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 98 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 98 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 42 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 42 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 42 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 102
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 103 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 103 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 34
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 29
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 105
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 34 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 34 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 34 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 102 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 102 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 104
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 37
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 30
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 44
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 30 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 44 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 44 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 44 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 104 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 104 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 104 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 37 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 37 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 37 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 105 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 105 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 105 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 102 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 30 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 30 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 29 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 29 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 29 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 17
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 79
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 108
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 107
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 70
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 17 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 74
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 87
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 70 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 70 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 70 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 74 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 107 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 107 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 107 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 17 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 79 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 17 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 87 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 87 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 87 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 79 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 108 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 108 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 79 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 81
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 74 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 74 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 108 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 81 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 81 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 81 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 84
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 90
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 41
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 16
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 7
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 43
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 62
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 90 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 45
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 43 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 41 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 50
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 41 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 41 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 43 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 43 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 84 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 84 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 84 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 7 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 62 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 62 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 62 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 50 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 50 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 50 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 90 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 90 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 16 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 16 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 16 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 7 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 7 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 45 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 45 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 45 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 53
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 54
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 46
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 51
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 52
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 46 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 54 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 46 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 46 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 51 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 54 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 54 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 53 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 51 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 53 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 52 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 52 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 53 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 33
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 52 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 11
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 82
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 49
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 48
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 80
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 51 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 82 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 49 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 49 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 49 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Handling connection for fd: 93
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 82 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 82 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 33 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 11 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 33 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 80 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 80 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 80 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 93 in map
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 33 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 93 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 93 from map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 11 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 11 from map
+Wed Feb 14 08:37:36 2024
+ [INFO] Found SSL object for fd: 48 in map
+Wed Feb 14 08:37:36 2024
+ [ERROR] SSL_read failed for fd: 48 with SSL error: 1
+Wed Feb 14 08:37:36 2024
+ [INFO] Removed SSL object for fd: 48 from map
+Wed Feb 14 08:38:17 2024
+ [INFO] Accepted new connection, fd: 6
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL object created and set for fd: 6
+Wed Feb 14 08:38:17 2024
+ [INFO] Added SSL object for fd: 6 to map
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:38:17 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:38:17 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:38:17 2024
+ [INFO] Accepted new connection, fd: 7
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL object created and set for fd: 7
+Wed Feb 14 08:38:17 2024
+ [INFO] Added SSL object for fd: 7 to map
+Wed Feb 14 08:38:17 2024
+ [INFO] Accepted new connection, fd: 8
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL object created and set for fd: 8
+Wed Feb 14 08:38:17 2024
+ [INFO] Added SSL object for fd: 8 to map
+Wed Feb 14 08:38:17 2024
+ [INFO] Accepted new connection, fd: 9
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL object created and set for fd: 9
+Wed Feb 14 08:38:17 2024
+ [INFO] Added SSL object for fd: 9 to map
+Wed Feb 14 08:38:17 2024
+ [INFO] Accepted new connection, fd: 10
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL object created and set for fd: 10
+Wed Feb 14 08:38:17 2024
+ [INFO] Added SSL object for fd: 10 to map
+Wed Feb 14 08:38:17 2024
+ [INFO] Accepted new connection, fd: 11
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL object created and set for fd: 11
+Wed Feb 14 08:38:17 2024
+ [INFO] Added SSL object for fd: 11 to map
+Wed Feb 14 08:38:17 2024
+ [INFO] Accepted new connection, fd: 12
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL object created and set for fd: 12
+Wed Feb 14 08:38:17 2024
+ [INFO] Added SSL object for fd: 12 to map
+Wed Feb 14 08:38:17 2024
+ [INFO] Accepted new connection, fd: 13
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL object created and set for fd: 13
+Wed Feb 14 08:38:17 2024
+ [INFO] Added SSL object for fd: 13 to map
+Wed Feb 14 08:38:17 2024
+ [INFO] Accepted new connection, fd: 14
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL object created and set for fd: 14
+Wed Feb 14 08:38:17 2024
+ [INFO] Added SSL object for fd: 14 to map
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 10
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 9
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 8
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 12
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 9 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 8 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 11
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 13
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 14
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 11 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 13 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 12 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 14 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Accepted new connection, fd: 16
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL object created and set for fd: 16
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 10 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Added SSL object for fd: 16 to map
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 7
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 7 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 9
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 9 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 10
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 10 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 13
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 13 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 16
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 16 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 14
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 14 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 8
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 8 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 12
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 12 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 11
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 11 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 9
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 7
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 10
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 7 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 9 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:38:17 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:38:17 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 10 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:38:17 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:38:17 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:38:17 2024
+ [INFO] SSL_read needs more data, waiting for next epoll event.
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 13
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 16
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 14
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 8
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 12
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 11
+Wed Feb 14 08:38:17 2024
+ [INFO] Handling connection for fd: 7
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 16 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:38:17 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:38:17 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 8 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 11 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 7 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 14 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:38:17 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 12 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:38:17 2024
+ [INFO] Found SSL object for fd: 13 in map
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed
+Wed Feb 14 08:38:17 2024
+ [INFO] Form body parsed with username: foo, password: bar
+Wed Feb 14 08:38:17 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:38:17 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:38:17 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:38:17 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:38:17 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:38:17 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:38:17 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:38:17 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:38:17 2024
+ [INFO] User logged in: foo
+Wed Feb 14 08:38:17 2024
+ [INFO] Response sent to client
+Wed Feb 14 08:38:47 2024
+ [INFO] Handling connection for fd: 7
+Wed Feb 14 08:38:47 2024
+ [INFO] Handling connection for fd: 6
+Wed Feb 14 08:38:47 2024
+ [INFO] Handling connection for fd: 9
+Wed Feb 14 08:38:47 2024
+ [INFO] Handling connection for fd: 10
+Wed Feb 14 08:38:47 2024
+ [INFO] Handling connection for fd: 8
+Wed Feb 14 08:38:47 2024
+ [INFO] Handling connection for fd: 16
+Wed Feb 14 08:38:47 2024
+ [INFO] Handling connection for fd: 13
+Wed Feb 14 08:38:47 2024
+ [INFO] Found SSL object for fd: 9 in map
+Wed Feb 14 08:38:47 2024
+ [INFO] Found SSL object for fd: 6 in map
+Wed Feb 14 08:38:47 2024
+ [ERROR] SSL_read failed for fd: 9 with SSL error: 1
+Wed Feb 14 08:38:47 2024
+ [INFO] Handling connection for fd: 11
+Wed Feb 14 08:38:47 2024
+ [ERROR] SSL_read failed for fd: 6 with SSL error: 1
+Wed Feb 14 08:38:47 2024
+ [INFO] Removed SSL object for fd: 6 from map
+Wed Feb 14 08:38:47 2024
+ [INFO] Found SSL object for fd: 8 in map
+Wed Feb 14 08:38:47 2024
+ [ERROR] SSL_read failed for fd: 8 with SSL error: 1
+Wed Feb 14 08:38:47 2024
+ [INFO] Removed SSL object for fd: 8 from map
+Wed Feb 14 08:38:47 2024
+ [INFO] Found SSL object for fd: 16 in map
+Wed Feb 14 08:38:47 2024
+ [ERROR] SSL_read failed for fd: 16 with SSL error: 1
+Wed Feb 14 08:38:47 2024
+ [INFO] Removed SSL object for fd: 16 from map
+Wed Feb 14 08:38:47 2024
+ [INFO] Found SSL object for fd: 13 in map
+Wed Feb 14 08:38:47 2024
+ [ERROR] SSL_read failed for fd: 13 with SSL error: 1
+Wed Feb 14 08:38:47 2024
+ [INFO] Found SSL object for fd: 7 in map
+Wed Feb 14 08:38:47 2024
+ [ERROR] SSL_read failed for fd: 7 with SSL error: 1
+Wed Feb 14 08:38:47 2024
+ [INFO] Removed SSL object for fd: 7 from map
+Wed Feb 14 08:38:47 2024
+ [INFO] Removed SSL object for fd: 9 from map
+Wed Feb 14 08:38:47 2024
+ [INFO] Handling connection for fd: 14
+Wed Feb 14 08:38:47 2024
+ [INFO] Handling connection for fd: 12
+Wed Feb 14 08:38:47 2024
+ [INFO] Found SSL object for fd: 14 in map
+Wed Feb 14 08:38:47 2024
+ [INFO] Found SSL object for fd: 10 in map
+Wed Feb 14 08:38:47 2024
+ [ERROR] SSL_read failed for fd: 10 with SSL error: 1
+Wed Feb 14 08:38:47 2024
+ [INFO] Removed SSL object for fd: 10 from map
+Wed Feb 14 08:38:47 2024
+ [INFO] Found SSL object for fd: 12 in map
+Wed Feb 14 08:38:47 2024
+ [ERROR] SSL_read failed for fd: 12 with SSL error: 1
+Wed Feb 14 08:38:47 2024
+ [INFO] Removed SSL object for fd: 12 from map
+Wed Feb 14 08:38:47 2024
+ [INFO] Found SSL object for fd: 11 in map
+Wed Feb 14 08:38:47 2024
+ [ERROR] SSL_read failed for fd: 11 with SSL error: 1
+Wed Feb 14 08:38:47 2024
+ [INFO] Removed SSL object for fd: 11 from map
+Wed Feb 14 08:38:47 2024
+ [INFO] Removed SSL object for fd: 13 from map
+Wed Feb 14 08:38:47 2024
+ [ERROR] SSL_read failed for fd: 14 with SSL error: 1
+Wed Feb 14 08:38:47 2024
+ [INFO] Removed SSL object for fd: 14 from map
