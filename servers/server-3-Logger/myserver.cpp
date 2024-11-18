@@ -21,7 +21,7 @@ std::map<std::string, RequestHandler> post_routes;
 
 // 初始化路由表
 void setupRoutes() {
-    LOG_INFO("Setting up routes");  // 第七课新增：记录路由设置
+    LOG_INFO("Setting up routes");  
     // GET请求处理
     get_routes["/"] = [](const std::string& request) {
         return "Hello, World!";
@@ -48,9 +48,9 @@ void setupRoutes() {
     // TODO: 添加其他路径和处理函数
 }
 
-// 第六课新增，解析HTTP请求
+// 解析HTTP请求
 std::pair<std::string, std::string> parseHttpRequest(const std::string& request) {
-    LOG_INFO("Parsing HTTP request");  // 第七课新增：记录请求解析
+    LOG_INFO("Parsing HTTP request");  // 记录请求解析
     // 解析请求方法和URI
     size_t method_end = request.find(" ");
     std::string method = request.substr(0, method_end);
@@ -69,9 +69,9 @@ std::pair<std::string, std::string> parseHttpRequest(const std::string& request)
     return {method, uri};
 }
 
-// 第六课新增，处理HTTP请求
+// 处理HTTP请求
 std::string handleHttpRequest(const std::string& method, const std::string& uri, const std::string& body) {
-    LOG_INFO("Handling HTTP request for URI: %s", uri.c_str());  // 第七课新增：记录请求处理
+    LOG_INFO("Handling HTTP request for URI: %s", uri.c_str());  // 记录请求处理
     if (method == "GET" && get_routes.count(uri) > 0) {
         return get_routes[uri](body);
     } else if (method == "POST" && post_routes.count(uri) > 0) {
@@ -100,7 +100,7 @@ int main() {
 
     // 监听请求
     listen(server_fd, 3);
-    LOG_INFO("Server listening on port %d",PORT);  // 第七课新增：记录服务器监听
+    LOG_INFO("Server listening on port %d",PORT);  // 记录服务器监听
 
 
     // 设置路由

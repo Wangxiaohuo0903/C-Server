@@ -23,27 +23,6 @@ std::map<std::string, RequestHandler> post_routes;
 Database db("users.db"); // 创建数据库对象
 
 
-// 第八课新增：解析请求正文的辅助函数
-std::string urlDecode(const std::string &s) {
-    std::string decoded;
-    std::istringstream iss(s);
-    char c;
-
-    while (iss >> c) {
-        if (c == '+') {
-            decoded += ' ';
-        } else if (c == '%' && iss.peek() != EOF) {
-            int value;
-            iss >> std::hex >> value;
-            decoded += static_cast<char>(value);
-            iss.get(); // 移动到下一个字符
-        } else {
-            decoded += c;
-        }
-    }
-
-    return decoded;
-}
 
 // 然后在 parseFormBody 函数中使用它
 std::map<std::string, std::string> parseFormBody(const std::string& body) {
@@ -73,7 +52,7 @@ std::map<std::string, std::string> parseFormBody(const std::string& body) {
 
 // 初始化路由表
 void setupRoutes() {
-    LOG_INFO("Setting up routes");  // 第七课新增：记录路由设置
+    LOG_INFO("Setting up routes");  // 记录路由设置
     // GET请求处理
     get_routes["/"] = [](const std::string& request) {
         return "Hello, World!";
@@ -120,9 +99,9 @@ void setupRoutes() {
      // TODO: 添加其他路径和处理函数
 }
 
-// 第六课新增，解析HTTP请求
+// 解析HTTP请求
 std::tuple<std::string, std::string, std::string> parseHttpRequest(const std::string& request) {
-    LOG_INFO("Parsing HTTP request");  // 第七课新增：记录请求解析
+    LOG_INFO("Parsing HTTP request");  // 记录请求解析
     // 解析请求方法和URI
     size_t method_end = request.find(" ");
     std::string method = request.substr(0, method_end);
@@ -143,9 +122,9 @@ std::tuple<std::string, std::string, std::string> parseHttpRequest(const std::st
 
 
 
-// 第六课新增，处理HTTP请求
+// 处理HTTP请求
 std::string handleHttpRequest(const std::string& method, const std::string& uri, const std::string& body) {
-    LOG_INFO("Handling HTTP request for URI: %s" , uri.c_str());  // 第七课新增：记录请求处理
+    LOG_INFO("Handling HTTP request for URI: %s" , uri.c_str());  // 记录请求处理
     if (method == "GET" && get_routes.count(uri) > 0) {
         return get_routes[uri](body);
     } else if (method == "POST" && post_routes.count(uri) > 0) {
@@ -175,7 +154,7 @@ int main() {
 
     // 监听请求
     listen(server_fd, 3);
-    LOG_INFO("Server listening on port %d", PORT);  // 第七课新增：记录服务器监听
+    LOG_INFO("Server listening on port %d", PORT);  // 记录服务器监听
 
 
     // 设置路由

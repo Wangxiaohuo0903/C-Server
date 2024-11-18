@@ -32,11 +32,17 @@ public:
         }
 
         // 使用可变参数处理日志信息的格式化
-        va_list args;
-        va_start(args, format);
-        char buffer[2048];
-        vsnprintf(buffer, sizeof(buffer), format, args);
-        va_end(args);
+        va_list args; // 声明一个可变参数列表，用于存储不定数量的参数
+        va_start(args, format); // 初始化args变量，并指向可变参数的第一个参数。format是最后一个命名参数
+        char buffer[2048]; // 声明一个字符数组buffer，大小为2048，用于存储格式化后的日志信息
+        vsnprintf(buffer, sizeof(buffer), format, args); // 使用vsnprintf格式化字符串，将格式化的内容写入buffer
+        // 其中：
+        // - buffer 是目标字符数组
+        // - sizeof(buffer) 是写入buffer的最大字符数，防止溢出
+        // - format 是格式字符串，指定日志信息的格式
+        // - args 是可变参数列表，包含所有传入的可变参数
+        va_end(args); // 清理args，结束可变参数的处理
+
 
         // 将时间戳、日志级别和格式化后的日志信息写入日志文件
         logFile << std::ctime(&now_c) << " [" << levelStr << "] " << buffer << std::endl;

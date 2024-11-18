@@ -47,7 +47,7 @@ void setupRoutes() {
     // TODO: 添加其他路径和处理函数
 }
 
-// 第六课新增，解析HTTP请求
+// 新增，解析HTTP请求
 std::pair<std::string, std::string> parseHttpRequest(const std::string& request) {
     // 找到第一个空格，确定HTTP方法的结束位置
     size_t method_end = request.find(" ");
@@ -122,7 +122,6 @@ int main() {
         // 发送响应
         std::string response = "HTTP/1.1 200 OK\nContent-Type: text/plain\n\n" + response_body;
         send(new_socket, response.c_str(), response.size(), 0);
-
         // 关闭连接
         close(new_socket);
     }
