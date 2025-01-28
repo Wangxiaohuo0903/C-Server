@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>文件上传与下载示例</title>
+  <style>
+    /* ======= 基础重置与布局 ======= */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      padding: 20px;
+    }
+    h1, h2 {
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 24px;
+    }
+    h2 {
+      font-size: 18px;
+    }
+    .section {
+      background: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .section h2 {
+      margin-bottom: 10px;
+    }
+    .btn {
+      display: inline-block;
+      background: #4CAF50;
+      color: #fff;
+      padding: 8px 16px;
+      text-decoration: none;
+      border-radius: 4px;
+      cursor: pointer;
+      border: none;
+    }
+    .btn:hover {
+      background: #45a049;
+    }
+    .file-list {
+      list-style: none;
+      margin-top: 10px;
+    }
+    .file-list li {
+      margin: 4px 0;
+    }
+    .file-list a {
+      color: #007BFF;
+      text-decoration: none;
+    }
+    .file-list a:hover {
+      text-decoration: underline;
+    }
+    .input-file {
+      margin-right: 8px;
+    }
+    .download-input {
+      width: 200px;
+      padding: 4px;
+      margin-right: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .note {
+      color: #666;
+      font-size: 14px;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>文件上传与下载示例</h1>
+
+  <!-- 文件上传区域 -->
+  <div class="section" id="uploadSection">
+    <h2>上传文件</h2>
+    <input class="input-file" type="file" id="fileInput" />
+    <button class="btn" id="uploadBtn">上传文件</button>
+    <p class="note">本示例简单使用 Base64 形式发送，实际可用 multipart/form-data。</p>
+  </div>
+
+  <!-- 文件列表与下载区域 -->
+  <div class="section" id="fileListSection">
+    <h2>查看已有文件</h2>
+    <button class="btn" id="listFilesBtn">列出文件</button>
+    <ul class="file-list" id="fileList"></ul>
+    <p class="note">点击文件名即可下载。</p>
+  </div>
+
+  <!-- 直接输入文件名进行下载（可选） -->
+  <div class="section" id="downloadSection">
+    <h2>下载文件 (手动输入文件名)</h2>
+    <input class="download-input" type="text" id="downloadFilename" placeholder="输入文件名" />
+    <button class="btn" id="downloadBtn">下载</button>
+    <p class="note">该方式会跳转到 /download?filename=xxx</p>
+  </div>
+
+  <script>
+    // ================== 1. 文件上传逻辑 ==================
+    document.getElementById("uploadBtn").addEventListener("click", async () => {
+      const fileInput = document.getElementById("fileInput");
+      if (!fileInput.files.length) {
+        alert("请先选择一个文件！");
+        return;
+      }
+      const file = fileInput.files[0];
+
+      // 用 FileReader 读取文件内容，以二进制形式读取
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        // e.target.result 是文件的二进制字符串
+        // 将其用 btoa() 转成 base64
+        const binaryString = e.target.result;
+        const base64Data = btoa(binaryString);
+
+        // 后端 /upload 路由只接受 filename 和 filedata
+        const params = new URLSearchParams();
+        params.append("filename", file.name);
+        params.append("filedata", base64Data);
+
+        try {
+          const response = await fetch("/upload", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: params.toString()
+          });
+          if (response.ok) {
+            alert("文件上传成功！");
+          } else {
+            const errText = await response.text();
+            alert("文件上传失败: " + errText);
+          }
+        } catch (error) {
+          alert("请求出错: " + error);
+        }
+      };
+      reader.readAsBinaryString(file);
+    });
+
+    // ================== 2. 列出文件逻辑 ==================
+    document.getElementById("listFilesBtn").addEventListener("click", async () => {
+      try {
+        const response = await fetch("/files");  // GET /files
+        if (!response.ok) {
+          alert("获取文件列表失败，状态码: " + response.status);
+          return;
+        }
+        // 假设 /files 返回 JSON 数组
+        const fileArray = await response.json();
+
+        const fileList = document.getElementById("fileList");
+        fileList.innerHTML = ""; // 清空
+
+        fileArray.forEach(filename => {
+          const li = document.createElement("li");
+          // 创建一个下载链接，指向 /download?filename=xxx
+          const link = document.createElement("a");
+          link.href = "/download?filename=" + encodeURIComponent(filename);
+          link.textContent = filename;
+          // 部分浏览器支持 link.download，会直接提示下载
+          link.download = filename;
+
+          li.appendChild(link);
+          fileList.appendChild(li);
+        });
+      } catch (error) {
+        alert("列出文件时出错: " + error);
+      }
+    });
+
+    // ================== 3. 直接输入文件名进行下载 ==================
+    document.getElementById("downloadBtn").addEventListener("click", () => {
+      const filename = document.getElementById("downloadFilename").value.trim();
+      if (!filename) {
+        alert("请输入文件名！");
+        return;
+      }
+      // 直接跳转到下载链接
+      window.location.href = "/download?filename=" + encodeURIComponent(filename);
+    });
+  </script>
+</body>
+</html>

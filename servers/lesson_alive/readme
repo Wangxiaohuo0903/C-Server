@@ -1,0 +1,25 @@
+测试流程
+进入docker当前目录后执行命令
+apt-get update
+apt-get install zlib1g-dev
+g++ main.cpp -o myserver -lsqlite3 -lz
+./myserver
+
+然后在另一个终端根据端口号测试持久连接和响应头压缩（端口号根据自己实际情况修改）
+curl -v --http1.1 --keepalive --header "Connection: keep-alive" --header "Accept-Encoding: gzip" http://localhost:9000
+
+*   Trying [::1]:9000...
+* Connected to localhost (::1) port 9000
+> GET / HTTP/1.1
+> Host: localhost:9000
+> User-Agent: curl/8.4.0
+> Accept: */*
+> Connection: keep-alive
+> Accept-Encoding: gzip
+> 
+< HTTP/1.1 200 OK
+< Connection: keep-alive
+< Content-Length: 13
+< 
+* Connection #0 to host localhost left intact
+Hello, World!%                                 
