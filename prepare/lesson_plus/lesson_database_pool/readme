@@ -1,0 +1,10 @@
+测试流程
+进入docker当前目录后执行命令
+apt-get update
+apt-get install libssl-dev
+g++ main.cpp -o myserver -lsqlite3 -lssl -lcrypto
+./myserver
+
+
+然后正常测试登陆注册
+curl -X POST -d "username=1&password=1"  http://localhost:9000/login   

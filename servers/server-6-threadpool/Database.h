@@ -1,12 +1,9 @@
-#pragma once
 #include <sqlite3.h>
 #include <string>
-#include <mutex>
 
 class Database {
 private:
     sqlite3* db;
-    std::mutex dbMutex; // 互斥锁，用于同步对数据库的访问
 
 public:
     // 构造函数，用于打开数据库并创建用户表
@@ -32,7 +29,6 @@ public:
 
     // 用户注册函数
     bool registerUser(const std::string& username, const std::string& password) {
-        std::lock_guard<std::mutex> guard(dbMutex); // 锁定互斥锁
         std::string sql = "INSERT INTO users (username, password) VALUES (?, ?);";
         sqlite3_stmt* stmt;
 
@@ -62,7 +58,6 @@ public:
 
     // 用户登录函数
     bool loginUser(const std::string& username, const std::string& password) {
-        std::lock_guard<std::mutex> guard(dbMutex); // 锁定互斥锁
         std::string sql = "SELECT password FROM users WHERE username = ?;";
         sqlite3_stmt* stmt;
 

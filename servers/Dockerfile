@@ -6,8 +6,10 @@ RUN sed -i 's/http:\/\/ports.ubuntu.com/http:\/\/mirrors.tuna.tsinghua.edu.cn/g'
 
 # 更新软件包并安装所需的库
 RUN apt-get update 
-RUN apt-get install -y --no-install-recommends build-essential python3 python3-pip libsqlite3-dev nginx apache2-utils curl&& \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y build-essential
+RUN apt-get install -y python3 python3-pip
+RUN apt-get install -y libsqlite3-dev nginx apache2-utils curl && \
+rm -rf /var/lib/apt/lists/*
 # 配置 Nginx (假设您已经创建了 nginx.conf 并放在与 Dockerfile 相同的目录下)
 COPY nginx.conf /etc/nginx/nginx.conf
 

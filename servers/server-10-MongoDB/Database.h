@@ -67,7 +67,7 @@ public:
         }
         return false;
     }
-// 17新增
+
      // 存储图片信息
     bool storeImage(const std::string& imageName, const std::string& imagePath, const std::string& description) {
         bsoncxx::builder::stream::document document{};

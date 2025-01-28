@@ -61,6 +61,12 @@
         "condition_variable": "cpp",
         "deque": "cpp",
         "future": "cpp",
-        "queue": "cpp"
-    }
+        "queue": "cpp",
+        "execution": "cpp",
+        "memory": "cpp",
+        "forward_list": "cpp",
+        "print": "cpp",
+        "stack": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
