@@ -81,6 +81,7 @@ public:
         //               const char* value, 
         //               int n, 
         //               void(*destroy)(void*) /* 或者使用 SQLITE_TRANSIENT */);
+        //               SQLITE_STATIC含义: 告诉 SQLite 传入的数据在语句执行期间不会被修改或释放，SQLite 可以直接使用传入的指针。
         sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_STATIC);
 
         // 执行SQL语句

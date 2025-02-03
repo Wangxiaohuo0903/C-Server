@@ -24,29 +24,37 @@ Database db("users.db"); // 创建数据库对象
 
 
 
-// 然后在 parseFormBody 函数中使用它
+// 解析请求体并提取键值对
 std::map<std::string, std::string> parseFormBody(const std::string& body) {
-    std::map<std::string, std::string> params;
-    std::istringstream stream(body);
-    std::string pair;
+    std::map<std::string, std::string> params;  // 用于存储解析出的键值对
+    std::istringstream stream(body);           // 将字符串形式的body转换为输入流
+    std::string pair;                          // 用于存储每个键值对字符串
 
-    LOG_INFO("Parsing body: %s", body.c_str());  // 记录原始body数据
+    LOG_INFO("Parsing body: %s", body.c_str());  // 记录原始body数据，便于调试
 
+    // 逐个解析键值对，以 '&' 为分隔符
     while (std::getline(stream, pair, '&')) {
+        // 查找键值对中的 '=' 分隔符
         std::string::size_type pos = pair.find('=');
         if (pos != std::string::npos) {
-            std::string key = pair.substr(0, pos);
-            std::string value = pair.substr(pos + 1);
+            // 提取键和值
+            std::string key = pair.substr(0, pos);    // 从开头到 '=' 之前的部分是键
+            std::string value = pair.substr(pos + 1); // 从 '=' 之后的部分是值
+
+            // 将键值对存入map中
             params[key] = value;
 
-            LOG_INFO("Parsed key-value pair: %s = %s" , key.c_str(), value.c_str());  // 记录每个解析出的键值对
+            // 记录解析出的键值对，便于调试
+            LOG_INFO("Parsed key-value pair: %s = %s", key.c_str(), value.c_str());
         } else {
-            // 错误处理：找不到 '=' 分隔符
+            // 错误处理：如果找不到 '=' 分隔符，说明键值对格式不正确
             std::string error_msg = "Error parsing: " + pair;
             LOG_ERROR(error_msg.c_str());  // 记录错误信息
-            std::cerr << error_msg << std::endl;
+            std::cerr << error_msg << std::endl;  // 输出错误信息到标准错误流
         }
     }
+
+    // 返回解析出的键值对
     return params;
 }
 
@@ -58,11 +66,9 @@ void setupRoutes() {
         return "Hello, World!";
     };
     get_routes["/register"] = [](const std::string& request) {
-        // TODO: 实现用户注册逻辑
         return "Please use POST to register";
     };
     get_routes["/login"] = [](const std::string& request) {
-        // TODO: 实现用户登录逻辑
         return "Please use POST to login";
     };
 

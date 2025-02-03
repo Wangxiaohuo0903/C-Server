@@ -26,7 +26,12 @@ public:
                     {
                         // 创建互斥锁以保护任务队列
                         std::unique_lock<std::mutex> lock(this->queue_mutex);
-                        // 使用条件变量等待任务或停止信号
+                        // 使用条件变量等待，直到满足以下条件之一：
+                        // 1. 线程池被要求停止（this->stop 为 true）；
+                        // 2. 任务队列中有新任务可供处理（this->tasks 不为空）。
+                        // 
+                        // 在等待期间，当前线程会释放锁（lock），允许其他线程访问任务队列。
+                        // 当条件满足时，线程会被唤醒并重新获取锁，继续执行后续代码。
                         this->condition.wait(lock, [this]{ return this->stop || !this->tasks.empty(); });
                         // 如果线程池停止且任务队列为空，线程退出
                         if(this->stop && this->tasks.empty()) return;
