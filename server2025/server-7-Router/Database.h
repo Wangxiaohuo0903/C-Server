@@ -100,11 +100,7 @@ public:
             return false;
         }
 
-        // 获取存储的密码并转换为std::string
-        //功能：该函数用于获取SQLite查询结果集中指定列的数据字节数，
-        //不包括结束符（对于文本数据）。如果查询结果当前行的指定列是一个BLOB或者字符串类型，则返回实际数据的长度。
-        //用法：在成功执行了SQL查询且调用 sqlite3_step 后，你可以循环遍历结果集中的每一行，
-        //然后对每一列调用 sqlite3_column_bytes 来获取该列数据的大小。
+
         const char* stored_password = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
         std::string password_str(stored_password, sqlite3_column_bytes(stmt, 0));
 

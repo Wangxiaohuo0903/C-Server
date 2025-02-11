@@ -1,1 +1,10 @@
 g++ myserver.cpp -o server_name -lsqlite3
+
+如果想自己运行测试服务器性能，命令为
+
+ab -n 100 -c 100 http://localhost:8080/test_io
+
+ab -n 100 -c 100 http://localhost:8080/test_cpu
+
+注意这里的端口号要和你自己myserver.cpp的宏 PORT里写的一样，一般建议自行修改server4～6运行在不同的端口上
+在三个终端里启动后，再开一个终端来测试对比，具体可以看录播

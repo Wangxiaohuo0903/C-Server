@@ -8,7 +8,9 @@
 #include <string.h>
 #include <iomanip>
 #include <unistd.h>
-
+#include <thread>
+#include <chrono>
+#include <cmath>
 #include <sstream>
 #include "Logger.h"
 #include "Database.h"
@@ -24,37 +26,29 @@ Database db("users.db"); // 创建数据库对象
 
 
 
-// 解析请求体并提取键值对
+// 然后在 parseFormBody 函数中使用它
 std::map<std::string, std::string> parseFormBody(const std::string& body) {
-    std::map<std::string, std::string> params;  // 用于存储解析出的键值对
-    std::istringstream stream(body);           // 将字符串形式的body转换为输入流
-    std::string pair;                          // 用于存储每个键值对字符串
+    std::map<std::string, std::string> params;
+    std::istringstream stream(body);
+    std::string pair;
 
-    LOG_INFO("Parsing body: %s", body.c_str());  // 记录原始body数据，便于调试
+    LOG_INFO("Parsing body: %s", body.c_str());  // 记录原始body数据
 
-    // 逐个解析键值对，以 '&' 为分隔符
     while (std::getline(stream, pair, '&')) {
-        // 查找键值对中的 '=' 分隔符
         std::string::size_type pos = pair.find('=');
         if (pos != std::string::npos) {
-            // 提取键和值
-            std::string key = pair.substr(0, pos);    // 从开头到 '=' 之前的部分是键
-            std::string value = pair.substr(pos + 1); // 从 '=' 之后的部分是值
-
-            // 将键值对存入map中
+            std::string key = pair.substr(0, pos);
+            std::string value = pair.substr(pos + 1);
             params[key] = value;
 
-            // 记录解析出的键值对，便于调试
-            LOG_INFO("Parsed key-value pair: %s = %s", key.c_str(), value.c_str());
+            LOG_INFO("Parsed key-value pair: %s = %s" , key.c_str(), value.c_str());  // 记录每个解析出的键值对
         } else {
-            // 错误处理：如果找不到 '=' 分隔符，说明键值对格式不正确
+            // 错误处理：找不到 '=' 分隔符
             std::string error_msg = "Error parsing: " + pair;
             LOG_ERROR(error_msg.c_str());  // 记录错误信息
-            std::cerr << error_msg << std::endl;  // 输出错误信息到标准错误流
+            std::cerr << error_msg << std::endl;
         }
     }
-
-    // 返回解析出的键值对
     return params;
 }
 
@@ -102,7 +96,36 @@ void setupRoutes() {
             return "Login Failed!";
         }
     };
-     // TODO: 添加其他路径和处理函数
+        // 模拟 I/O 密集型任务
+    get_routes["/test_io"] = [](const std::string& request) {
+        // 模拟一个耗时的 I/O 操作（例如睡眠 100 毫秒）
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        // 返回响应
+        return "Test endpoint with simulated I/O delay";
+    };
+
+    // 模拟 CPU 密集型任务
+    get_routes["/test_cpu"] = [](const std::string& request) {
+        // 模拟一个CPU密集型任务，例如计算大量质数
+        volatile long long sum = 0;  // 使用 volatile 防止编译器优化
+        for (long long i = 2; i < 1000000; ++i) {
+            bool is_prime = true;
+            for (long long j = 2; j <= std::sqrt(i); ++j) {
+                if (i % j == 0) {
+                    is_prime = false;
+                    break;
+                }
+            }
+            if (is_prime) {
+                sum += i;  // 累加质数
+            }
+        }
+
+        // 返回响应
+        return "Test endpoint with simulated CPU-intensive task";
+    };
+    // TODO: 添加其他路径和处理函数
 }
 
 // 解析HTTP请求

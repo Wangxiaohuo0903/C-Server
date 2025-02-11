@@ -1,1 +1,9 @@
 g++ myserver.cpp -o server_name -lsqlite3
+登陆注册测试命令 端口号要和本机一致
+curl -X POST http://localhost:8080/register \
+     -d "username=testuser" \
+     -d "password=testpassword"
+
+curl -X POST http://localhost:8080/login \
+     -d "username=testuser" \
+     -d "password=testpassword"

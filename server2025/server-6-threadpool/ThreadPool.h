@@ -26,12 +26,7 @@ public:
                     {
                         // 创建互斥锁以保护任务队列
                         std::unique_lock<std::mutex> lock(this->queue_mutex);
-                        // 使用条件变量等待，直到满足以下条件之一：
-                        // 1. 线程池被要求停止（this->stop 为 true）；
-                        // 2. 任务队列中有新任务可供处理（this->tasks 不为空）。
-                        // 
-                        // 在等待期间，当前线程会释放锁（lock），允许其他线程访问任务队列。
-                        // 当条件满足时，线程会被唤醒并重新获取锁，继续执行后续代码。
+                        // 使用条件变量等待任务或停止信号
                         this->condition.wait(lock, [this]{ return this->stop || !this->tasks.empty(); });
                         // 如果线程池停止且任务队列为空，线程退出
                         if(this->stop && this->tasks.empty()) return;
@@ -70,6 +65,15 @@ public:
     using关键字在这里定义了一个别名return_type，它是对上述类型推导结果的引用。
 
     在后续的代码中，return_type将被用来表示异步任务的返回类型，简化代码并提高可读性。
+    示例：
+    int add(int a, int b) {
+        return a + b;
+    }
+    auto result = enqueue(add, 2, 3);
+    F 被推导为 int(int, int)（即 add 的类型）。
+    Args... 被推导为 int, int（即 2 和 3 的类型）。
+    std::result_of<F(Args...)>::type 推导出 int（即 add 的返回类型）。
+    最终返回类型是 std::future<int>。
     */
     template<class F, class... Args>
     auto enqueue(F&& f, Args&&... args) 

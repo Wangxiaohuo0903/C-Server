@@ -79,16 +79,18 @@ public:
         // int sqlite3_bind_text(sqlite3_stmt* stmt, 
         //               int index, 
         //               const char* value, 
-        //               int n, 
+        //               int n,   
         //               void(*destroy)(void*) /* 或者使用 SQLITE_TRANSIENT */);
+        //               SQLITE_STATIC含义: 告诉 SQLite 传入的数据在语句执行期间不会被修改或释放，SQLite 可以直接使用传入的指针。
         sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_STATIC);
 
         // 执行SQL语句
         //功能：执行预编译的 SQL 语句（prepared statement）。它会推进到下一个结果行或者直到整个查询完成。
         //对于 SELECT 查询，每调用一次 sqlite3_step，就会获取下一行数据；
         //对于 INSERT, UPDATE, DELETE 等非查询操作，则会在操作成功完成后返回。
-        //返回值：在处理 SELECT 查询时，如果还有更多的数据行可读取，将返回 SQLITE_ROW；
-        //当查询完全执行完毕且没有错误时，返回 SQLITE_DONE。
+        //返回值：如果用户存在，sqlite3_step(stmt) 会返回 SQLITE_ROW。
+        //如果用户不存在，sqlite3_step(stmt) 会返回 SQLITE_DONE。
+
         if (sqlite3_step(stmt) != SQLITE_ROW) {
             LOG_INFO("User not found: %s" , username.c_str()); // 记录日志
             sqlite3_finalize(stmt);
@@ -96,10 +98,9 @@ public:
         }
 
         // 获取存储的密码并转换为std::string
-        //功能：该函数用于获取SQLite查询结果集中指定列的数据字节数，
-        //不包括结束符（对于文本数据）。如果查询结果当前行的指定列是一个BLOB或者字符串类型，则返回实际数据的长度。
-        //用法：在成功执行了SQL查询且调用 sqlite3_step 后，你可以循环遍历结果集中的每一行，
-        //然后对每一列调用 sqlite3_column_bytes 来获取该列数据的大小。
+        // 功能：sqlite3_column_text(stmt, 0) 是 SQLite 的 API 函数，用于获取当前行第 0 列的文本数据
+        //（以 const unsigned char* 形式返回）。
+        //reinterpret_cast<const char*> 将 const unsigned char* 转换为 const char*，以便后续使用。
         const char* stored_password = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
         std::string password_str(stored_password, sqlite3_column_bytes(stmt, 0));
 
