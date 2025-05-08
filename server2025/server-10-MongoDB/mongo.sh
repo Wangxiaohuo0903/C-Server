@@ -8,4 +8,4 @@ docker network create mynetwork
 docker run -d --network mynetwork -p 27017:27017 mongo
 
 # 运行您的应用程序（根据您的需求进行修改）
- docker run -it --network mynetwork -p 9002:80 -p 9003:8080 -p 9004:80801 -p 9005:8082 juanbing/juanbing-server bash
+docker run -it --network mynetwork -p 9002:80 -p 9003:8080 -p 9004:8081 -p 9005:8082 juanbing/juanbing-server2025 bash

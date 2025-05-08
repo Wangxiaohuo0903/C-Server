@@ -2,51 +2,159 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Upload Image</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload | Cool Design</title>
     <style>
+        /* 重置所有元素的样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* 设置页面背景，渐变色和全屏居中 */
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background: linear-gradient(135deg, #4facfe, #00f2fe); /* 渐变背景色 */
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
+            color: #fff;
+            overflow: hidden; /* 禁止滚动 */
         }
-        form {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        input[type="file"],
-        input[type="text"] {
-            margin-bottom: 10px;
+
+        /* 上传表单容器 */
+        .upload-container {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6); /* 阴影效果 */
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
+            max-width: 450px;
+            text-align: center;
+            backdrop-filter: blur(15px); /* 背景模糊 */
+            position: relative;
         }
-        input[type="submit"] {
-            background-color: #007bff;
+
+        /* 标题样式 */
+        .upload-container h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #4facfe;
+            background: linear-gradient(45deg, #4facfe, #00f2fe); /* 渐变文字 */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glowText 1.5s ease-in-out infinite alternate; /* 发光效果 */
+        }
+
+        /* 发光效果动画 */
+        @keyframes glowText {
+            0% {
+                text-shadow: 0 0 20px #4facfe, 0 0 40px #4facfe;
+            }
+            100% {
+                text-shadow: 0 0 40px #00f2fe, 0 0 80px #00f2fe;
+            }
+        }
+
+        /* 输入框样式 */
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        /* 输入框样式 */
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #4facfe; /* 输入框边框 */
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1); /* 输入框背景 */
+            font-size: 1.1rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        /* 聚焦时输入框效果 */
+        .form-group input:focus {
+            border-color: #00f2fe;
+            background: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px #00f2fe;
+            outline: none;
+        }
+
+        /* 提交按钮样式 */
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(45deg, #4facfe, #00f2fe); /* 渐变按钮 */
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
+            border-radius: 12px;
+            font-size: 1.2rem;
             cursor: pointer;
-            width: 100%;
+            transition: transform 0.3s ease; /* 悬浮效果 */
+            position: relative;
         }
-        input[type="submit"]:hover {
-            background-color: #0056b3;
+
+        /* 悬浮时按钮效果 */
+        .submit-btn:hover {
+            transform: scale(1.1); /* 按钮放大 */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
+
+        /* 悬浮按钮效果 */
+        .floating-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: #00f2fe; /* 按钮颜色 */
+            border-radius: 50%; /* 圆形按钮 */
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 2rem;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        /* 悬浮按钮旋转效果 */
+        .floating-btn:hover {
+            transform: rotate(45deg);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .upload-container {
+                padding: 2rem;
+            }
+
+            .upload-container h2 {
+                font-size: 2rem;
+            }
+        }
+
     </style>
 </head>
 <body>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" required>
-        <input type="text" name="description" placeholder="Description">
-        <input type="submit" value="Upload">
-    </form>
+    <div class="upload-container">
+        <h2>Upload Image</h2>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="file" name="file" required>
+            </div>
+            <div class="form-group">
+                <input type="text" name="description" placeholder="Enter image description" required>
+            </div>
+            <button type="submit" class="submit-btn">Upload</button>
+        </form>
+        <!-- 悬浮按钮 -->
+        <div class="floating-btn" onclick="alert('Upload Now!')">
+            <span>+</span>
+        </div>
+    </div>
 </body>
 </html>
