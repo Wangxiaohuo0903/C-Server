@@ -1,37 +1,34 @@
 # 使用特定版本的Ubuntu镜像
-FROM ubuntu:latest
+FROM ubuntu:22.04
 
-# 替换为阿里云的 Ubuntu 镜像源
-RUN sed -i 's|http://ports.ubuntu.com|https://mirrors.ustc.edu.cn/ubuntu-ports|g' /etc/apt/sources.list
-# 更新软件包并安装所需的库
+# 阶段1：使用默认官方源安装证书工具
+# 注意：此处暂不替换镜像源，利用Docker镜像内置的源配置
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      ca-certificates \
+      gnupg2 && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update 
-RUN apt-get install -y build-essential
-RUN apt-get install -y python3 python3-pip libssl-dev 
-RUN apt-get install -y libsqlite3-dev nginx apache2-utils curl && \
-rm -rf /var/lib/apt/lists/*
-RUN apt update && apt install sqlite3
-# 配置 Nginx (假设您已经创建了 nginx.conf 并放在与 Dockerfile 相同的目录下)
+# 阶段2：替换为阿里云镜像源
+RUN sed -i \
+    -e 's|http://archive.ubuntu.com/ubuntu|https://mirrors.aliyun.com/ubuntu|g' \
+    -e 's|http://security.ubuntu.com/ubuntu|https://mirrors.aliyun.com/ubuntu|g' \
+    /etc/apt/sources.list
+
+# 阶段3：更新并安装其他依赖
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      build-essential \
+      python3 python3-pip libssl-dev libsqlite3-dev \
+      nginx apache2-utils curl sqlite3 && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# 后续配置保持不变...
 COPY nginx.conf /etc/nginx/nginx.conf
-
-# 复制代码到容器中
 COPY . /usr/src/myapp
-
-# 设置工作目录
 WORKDIR /usr/src/myapp
-
-# 在 Dockerfile 中创建缓存目录
 RUN mkdir -p /var/cache/nginx
-
-# 编译程序 (确保您的编译命令适用于您的项目)
-# RUN g++ -o myserver10 lesson13_Nginx/main.cpp -lsqlite3
-
-# 暴露端口（Nginx 和您的应用程序）
 EXPOSE 80 8080 8081 8082
-
-# 创建并复制启动脚本到容器
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
-
-# 启动脚本将运行 Nginx 和您的应用程序
 CMD ["/start.sh"]

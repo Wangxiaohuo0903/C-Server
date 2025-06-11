@@ -11,10 +11,20 @@ docker run -d --network mynetwork -p 27017:27017 mongo
 docker run -it --network mynetwork -p 9002:80 -p 9003:8080 -p 9004:8081 -p 9005:8082 juanbing/juanbing-server2025 bash
 
 进入容器后，在容器的终端内
+
+
 cd server-10-MongoDB/
 chmod 777 mongo1.sh 
 ./mongo1.sh 
 nginx
 ldconfig
+
+接下来需要在主机运行docker ps找到mongo的container ID 
+然后docker inspect ID后找到mongo的IP Address
+然后换掉main.cpp里的mongo的实际IP
+
+
 g++ main.cpp -o myserver  -lsqlite3 -L/usr/local/lib -lmongocxx -lbsoncxx -I/usr/local/include/mongocxx/v_noabi -I/usr/local/include/bsoncxx/v_noabi
 ./myserver
+
+
