@@ -1,0 +1,73 @@
+Performing C++ SOURCE FILE Test GGML_COMPILER_SUPPORTS_FP16_FORMAT_I3E failed with the following output:
+Change Dir: /Users/xiaohuo/Documents/Code/项目一代码/AI-infra/lesson_threads/build/CMakeFiles/CMakeScratch/TryCompile-fP6wL1
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_12a12/fast && /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_12a12.dir/build.make CMakeFiles/cmTC_12a12.dir/build
+Building CXX object CMakeFiles/cmTC_12a12.dir/src.cxx.o
+/Library/Developer/CommandLineTools/usr/bin/c++ -DGGML_COMPILER_SUPPORTS_FP16_FORMAT_I3E  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -fPIE   -mfp16-format=ieee -std=gnu++17 -MD -MT CMakeFiles/cmTC_12a12.dir/src.cxx.o -MF CMakeFiles/cmTC_12a12.dir/src.cxx.o.d -o CMakeFiles/cmTC_12a12.dir/src.cxx.o -c /Users/xiaohuo/Documents/Code/项目一代码/AI-infra/lesson_threads/build/CMakeFiles/CMakeScratch/TryCompile-fP6wL1/src.cxx
+c++: error: unknown argument: '-mfp16-format=ieee'
+make[1]: *** [CMakeFiles/cmTC_12a12.dir/src.cxx.o] Error 1
+make: *** [cmTC_12a12/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }
+
+Performing C++ SOURCE FILE Test GGML_MACHINE_SUPPORTS_i8mm failed with the following compile output:
+Change Dir: /Users/xiaohuo/Documents/Code/项目一代码/AI-infra/lesson_threads/build/CMakeFiles/CMakeScratch/TryCompile-Zijtmb
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_3537f/fast && /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_3537f.dir/build.make CMakeFiles/cmTC_3537f.dir/build
+Building CXX object CMakeFiles/cmTC_3537f.dir/src.cxx.o
+/Library/Developer/CommandLineTools/usr/bin/c++ -DGGML_MACHINE_SUPPORTS_i8mm  -mcpu=native+i8mm -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -fPIE -std=gnu++17 -MD -MT CMakeFiles/cmTC_3537f.dir/src.cxx.o -MF CMakeFiles/cmTC_3537f.dir/src.cxx.o.d -o CMakeFiles/cmTC_3537f.dir/src.cxx.o -c /Users/xiaohuo/Documents/Code/项目一代码/AI-infra/lesson_threads/build/CMakeFiles/CMakeScratch/TryCompile-Zijtmb/src.cxx
+Linking CXX executable cmTC_3537f
+/opt/homebrew/Cellar/cmake/3.25.2/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3537f.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/c++  -mcpu=native+i8mm -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/cmTC_3537f.dir/src.cxx.o -o cmTC_3537f 
+
+
+...and run output:
+Illegal instruction
+Return value: FAILED_TO_RUN
+Source file was:
+#include <arm_neon.h>
+int main() { int8x16_t _a, _b; volatile int32x4_t _s = vmmlaq_s32(_s, _a, _b); return 0; }
+
+Performing C++ SOURCE FILE Test GGML_MACHINE_SUPPORTS_sve failed with the following compile output:
+Change Dir: /Users/xiaohuo/Documents/Code/项目一代码/AI-infra/lesson_threads/build/CMakeFiles/CMakeScratch/TryCompile-Uao4EJ
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_ddd5b/fast && /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_ddd5b.dir/build.make CMakeFiles/cmTC_ddd5b.dir/build
+Building CXX object CMakeFiles/cmTC_ddd5b.dir/src.cxx.o
+/Library/Developer/CommandLineTools/usr/bin/c++ -DGGML_MACHINE_SUPPORTS_sve  -mcpu=native+sve -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -fPIE -std=gnu++17 -MD -MT CMakeFiles/cmTC_ddd5b.dir/src.cxx.o -MF CMakeFiles/cmTC_ddd5b.dir/src.cxx.o.d -o CMakeFiles/cmTC_ddd5b.dir/src.cxx.o -c /Users/xiaohuo/Documents/Code/项目一代码/AI-infra/lesson_threads/build/CMakeFiles/CMakeScratch/TryCompile-Uao4EJ/src.cxx
+Linking CXX executable cmTC_ddd5b
+/opt/homebrew/Cellar/cmake/3.25.2/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ddd5b.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/c++  -mcpu=native+sve -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/cmTC_ddd5b.dir/src.cxx.o -o cmTC_ddd5b 
+
+
+...and run output:
+Illegal instruction
+Return value: FAILED_TO_RUN
+Source file was:
+#include <arm_sve.h>
+int main()  { svfloat32_t _a, _b; volatile svfloat32_t _c = svadd_f32_z(svptrue_b8(), _a, _b); return 0; }
+
+Performing C++ SOURCE FILE Test GGML_MACHINE_SUPPORTS_sme failed with the following compile output:
+Change Dir: /Users/xiaohuo/Documents/Code/项目一代码/AI-infra/lesson_threads/build/CMakeFiles/CMakeScratch/TryCompile-0YBsWh
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_69cd6/fast && /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_69cd6.dir/build.make CMakeFiles/cmTC_69cd6.dir/build
+Building CXX object CMakeFiles/cmTC_69cd6.dir/src.cxx.o
+/Library/Developer/CommandLineTools/usr/bin/c++ -DGGML_MACHINE_SUPPORTS_sme  -mcpu=native+sme -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -fPIE -std=gnu++17 -MD -MT CMakeFiles/cmTC_69cd6.dir/src.cxx.o -MF CMakeFiles/cmTC_69cd6.dir/src.cxx.o.d -o CMakeFiles/cmTC_69cd6.dir/src.cxx.o -c /Users/xiaohuo/Documents/Code/项目一代码/AI-infra/lesson_threads/build/CMakeFiles/CMakeScratch/TryCompile-0YBsWh/src.cxx
+Linking CXX executable cmTC_69cd6
+/opt/homebrew/Cellar/cmake/3.25.2/bin/cmake -E cmake_link_script CMakeFiles/cmTC_69cd6.dir/link.txt --verbose=1
+/Library/Developer/CommandLineTools/usr/bin/c++  -mcpu=native+sme -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX15.2.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/cmTC_69cd6.dir/src.cxx.o -o cmTC_69cd6 
+
+
+...and run output:
+Illegal instruction
+Return value: FAILED_TO_RUN
+Source file was:
+#include <arm_sme.h>
+__arm_locally_streaming int main() { __asm__ volatile("smstart; smstop;"); return 0; }
+
+Checking whether the ASM compiler is GNU using "--version" did not match "(GNU assembler)|(GCC)|(Free Software Foundation)":
+Apple clang version 16.0.0 (clang-1600.0.26.6)
+Target: arm64-apple-darwin24.3.0
+Thread model: posix
+InstalledDir: /Library/Developer/CommandLineTools/usr/bin

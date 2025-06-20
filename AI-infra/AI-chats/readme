@@ -1,0 +1,3 @@
+不用安装其它库
+g++ main.cpp -o myserver -lsqlite3
+./myserver
