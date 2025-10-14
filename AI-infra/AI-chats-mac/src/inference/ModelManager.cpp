@@ -176,19 +176,23 @@ std::string ModelManager::infer(const std::string& chat_id, const std::string& u
         prompt = chat_sessions_[chat_id].makePrompt();
     }
 
-    // ============ 前缀缓存优化 ============
-    // 提取前缀（第一轮对话前的部分，通常是system prompt + 第一个user消息）
-    // 简化版：将第一个 <|assistant|> 之前的内容作为前缀
+    // ============ 前缀缓存优化 v2 ============
+    // 新策略：只缓存第一轮完整对话（到第一个assistant回复结束）
+    // 这样相同chat_id的所有后续请求都能复用相同的前缀
     std::string prefix;
     int prefix_kv_len = 0;
-    size_t first_assistant = prompt.find("<|assistant|>");
 
-    // 只有在历史对话较长时才启用前缀缓存（至少2轮以上）
-    if (first_assistant != std::string::npos && first_assistant > 50) {
-        // 找倒数第二个 <|user|>（最后一个user消息之前的内容作为前缀）
-        size_t last_user = prompt.rfind("<|user|>");
-        if (last_user != std::string::npos && last_user > 0) {
-            prefix = prompt.substr(0, last_user);
+    // 查找第一个 <|assistant|> 和第二个 <|user|>
+    size_t first_assistant_pos = prompt.find("<|assistant|>");
+    if (first_assistant_pos != std::string::npos) {
+        // 找第二个 <|user|>（在第一个assistant之后）
+        size_t second_user_pos = prompt.find("<|user|>", first_assistant_pos + 13);
+
+        if (second_user_pos != std::string::npos) {
+            // 有至少2轮对话，提取第一轮作为前缀
+            prefix = prompt.substr(0, second_user_pos);
+
+            std::cerr << "[PrefixExtract] Extracted prefix up to 2nd user, len=" << prefix.size() << '\n';
 
             // 尝试从缓存中查找
             prefix_kv_len = findPrefixCache(prefix);
