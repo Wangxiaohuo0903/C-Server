@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat - 智能对话</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="chat-layout">
+        <!-- 侧边栏 -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>AI Chat</h3>
+                <button class="new-chat-btn" id="newChatBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    新对话
+                </button>
+            </div>
+
+            <div class="chat-list" id="chatList">
+                <!-- 聊天列表将动态生成 -->
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span id="username"></span>
+                </div>
+                <button class="logout-btn-sidebar" id="logoutBtn">退出登录</button>
+            </div>
+        </div>
+
+        <!-- 主聊天区域 -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <button class="toggle-sidebar-btn" id="toggleSidebar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="chat-title">
+                    <h2 id="chatTitle">AI 助手</h2>
+                    <p style="font-size: 12px; opacity: 0.8;">由 TinyLlama 驱动</p>
+                </div>
+                <button class="delete-chat-btn" id="deleteChatBtn" title="删除当前对话">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <h3>👋 欢迎使用 AI Chat</h3>
+                    <p>我是你的 AI 助手，有什么我可以帮助你的吗？</p>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div id="loading" class="loading" style="display: none;">AI 正在思考</div>
+                <form class="chat-input-form" id="chatForm">
+                    <input
+                        type="text"
+                        id="messageInput"
+                        placeholder="输入你的问题..."
+                        required
+                        autocomplete="off"
+                    >
+                    <button type="submit" id="sendBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/simple-api.js"></script>
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const loadingDiv = document.getElementById('loading');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const newChatBtn = document.getElementById('newChatBtn');
+        const chatList = document.getElementById('chatList');
+        const toggleSidebar = document.getElementById('toggleSidebar');
+        const sidebar = document.getElementById('sidebar');
+        const deleteChatBtn = document.getElementById('deleteChatBtn');
+        const chatTitle = document.getElementById('chatTitle');
+        const usernameSpan = document.getElementById('username');
+
+        let username = Storage.getUser();
+        let currentChatId = Storage.getChatId();
+        let chats = Storage.getChats() || [];
+
+        // Check authentication
+        if (!username) {
+            window.location.href = '/login.html';
+        }
+
+        usernameSpan.textContent = username;
+
+        // Toggle sidebar
+        toggleSidebar.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+
+        // Load chat list
+        function loadChatList() {
+            chatList.innerHTML = '';
+
+            if (chats.length === 0) {
+                chatList.innerHTML = '<div class="empty-chats">暂无对话</div>';
+                return;
+            }
+
+            chats.forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'chat-item' + (chat.id === currentChatId ? ' active' : '');
+                chatItem.innerHTML = `
+                    <div class="chat-item-content" data-chat-id="${chat.id}">
+                        <div class="chat-item-title">${chat.title || '新对话'}</div>
+                        <div class="chat-item-preview">${chat.preview || '开始新对话'}</div>
+                    </div>
+                    <button class="chat-item-delete" data-chat-id="${chat.id}" title="删除">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                `;
+                chatList.appendChild(chatItem);
+            });
+
+            // Add click handlers
+            document.querySelectorAll('.chat-item-content').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const chatId = parseInt(e.currentTarget.dataset.chatId);
+                    switchChat(chatId);
+                });
+            });
+
+            document.querySelectorAll('.chat-item-delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const chatId = parseInt(e.currentTarget.dataset.chatId);
+                    deleteChat(chatId);
+                });
+            });
+        }
+
+        // Create new chat
+        async function createNewChat() {
+            try {
+                newChatBtn.disabled = true;
+                newChatBtn.textContent = '创建中...';
+
+                const chatId = await API.createChat(username);
+
+                // Add to local chats list
+                chats.unshift({
+                    id: chatId,
+                    title: '新对话',
+                    preview: '开始新对话',
+                    createdAt: new Date().toISOString()
+                });
+
+                Storage.setChats(chats);
+                Storage.setChatId(chatId);
+                currentChatId = chatId;
+
+                // Clear messages and load new chat
+                chatMessages.innerHTML = `
+                    <div class="welcome-message">
+                        <h3>👋 开始新对话</h3>
+                        <p>我是你的 AI 助手，有什么我可以帮助你的吗？</p>
+                    </div>
+                `;
+
+                loadChatList();
+                messageInput.focus();
+
+                newChatBtn.disabled = false;
+                newChatBtn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    新对话
+                `;
+            } catch (error) {
+                console.error('Failed to create chat:', error);
+                alert('创建对话失败，请重试');
+                newChatBtn.disabled = false;
+                newChatBtn.innerHTML = `
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    新对话
+                `;
+            }
+        }
+
+        // Switch to different chat
+        async function switchChat(chatId) {
+            if (chatId === currentChatId) return;
+
+            currentChatId = chatId;
+            Storage.setChatId(chatId);
+
+            // Clear messages
+            chatMessages.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                // Load chat messages
+                const messages = await API.getChatMessages(chatId);
+
+                chatMessages.innerHTML = '';
+
+                if (messages.length === 0) {
+                    chatMessages.innerHTML = `
+                        <div class="welcome-message">
+                            <h3>👋 继续对话</h3>
+                            <p>有什么我可以帮助你的吗？</p>
+                        </div>
+                    `;
+                } else {
+                    messages.forEach(msg => {
+                        addMessage(msg.role, msg.content, false);
+                    });
+                }
+
+                loadChatList();
+            } catch (error) {
+                console.error('Failed to load messages:', error);
+                chatMessages.innerHTML = '<div class="error-message">加载消息失败</div>';
+            }
+        }
+
+        // Delete chat
+        function deleteChat(chatId) {
+            if (!confirm('确定要删除这个对话吗？')) return;
+
+            // Remove from local list
+            chats = chats.filter(c => c.id !== chatId);
+            Storage.setChats(chats);
+
+            // If deleting current chat, switch to another or create new
+            if (chatId === currentChatId) {
+                if (chats.length > 0) {
+                    switchChat(chats[0].id);
+                } else {
+                    createNewChat();
+                }
+            } else {
+                loadChatList();
+            }
+        }
+
+        // Delete current chat (from header button)
+        deleteChatBtn.addEventListener('click', () => {
+            if (currentChatId) {
+                deleteChat(currentChatId);
+            }
+        });
+
+        // Initialize chat session
+        async function initChat() {
+            if (!currentChatId || !chats.find(c => c.id === currentChatId)) {
+                // No current chat or chat not in list, create new one
+                await createNewChat();
+            } else {
+                // Load existing chat
+                try {
+                    const messages = await API.getChatMessages(currentChatId);
+                    chatMessages.innerHTML = '';
+
+                    if (messages.length === 0) {
+                        chatMessages.innerHTML = `
+                            <div class="welcome-message">
+                                <h3>👋 欢迎回来</h3>
+                                <p>继续我们的对话吧！</p>
+                            </div>
+                        `;
+                    } else {
+                        messages.forEach(msg => {
+                            addMessage(msg.role, msg.content, false);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Failed to load messages:', error);
+                    chatMessages.innerHTML = `
+                        <div class="welcome-message">
+                            <h3>👋 欢迎使用 AI Chat</h3>
+                            <p>我是你的 AI 助手，有什么我可以帮助你的吗？</p>
+                        </div>
+                    `;
+                }
+            }
+
+            loadChatList();
+        }
+
+        // Add message to chat
+        function addMessage(role, content, scroll = true) {
+            // Remove welcome message if exists
+            const welcomeMsg = chatMessages.querySelector('.welcome-message');
+            if (welcomeMsg) {
+                welcomeMsg.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+
+            if (scroll) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // Update chat preview
+        function updateChatPreview(chatId, firstMessage) {
+            const chat = chats.find(c => c.id === chatId);
+            if (chat) {
+                if (!chat.title || chat.title === '新对话') {
+                    // Generate title from first message
+                    chat.title = firstMessage.length > 30
+                        ? firstMessage.substring(0, 30) + '...'
+                        : firstMessage;
+                }
+                chat.preview = firstMessage.length > 50
+                    ? firstMessage.substring(0, 50) + '...'
+                    : firstMessage;
+                chat.updatedAt = new Date().toISOString();
+
+                Storage.setChats(chats);
+                loadChatList();
+            }
+        }
+
+        // Handle form submission
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Check if we need to create a new chat
+            if (!currentChatId) {
+                await createNewChat();
+            }
+
+            // Add user message
+            addMessage('user', message);
+            const userMessage = message;
+            messageInput.value = '';
+
+            // Update chat preview if this is the first message
+            const currentChat = chats.find(c => c.id === currentChatId);
+            if (currentChat && currentChat.title === '新对话') {
+                updateChatPreview(currentChatId, userMessage);
+            }
+
+            // Disable input
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+            loadingDiv.style.display = 'block';
+
+            try {
+                // Get AI response
+                const answer = await API.sendMessage(currentChatId, username, userMessage);
+
+                // Add AI message
+                addMessage('assistant', answer);
+            } catch (error) {
+                console.error('Failed to get response:', error);
+                addMessage('assistant', '抱歉，我遇到了一些问题。请稍后再试。');
+            } finally {
+                // Re-enable input
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                loadingDiv.style.display = 'none';
+                messageInput.focus();
+            }
+        });
+
+        // New chat button handler
+        newChatBtn.addEventListener('click', createNewChat);
+
+        // Logout handler
+        logoutBtn.addEventListener('click', () => {
+            if (confirm('确定要退出登录吗？')) {
+                Storage.clear();
+                window.location.href = '/login.html';
+            }
+        });
+
+        // Focus input on load
+        messageInput.focus();
+
+        // Initialize chat when page loads
+        initChat();
+    </script>
+</body>
+</html>

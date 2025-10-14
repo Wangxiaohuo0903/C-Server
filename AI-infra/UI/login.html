@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - AI Chat</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Chat</h1>
+            <p>登录你的账户开始对话</p>
+        </div>
+
+        <div class="form-container">
+            <div id="error" class="error"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        required
+                        autocomplete="username"
+                        placeholder="请输入用户名"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        autocomplete="current-password"
+                        placeholder="请输入密码"
+                    >
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">登录</button>
+            </form>
+
+            <div class="link-container">
+                还没有账户？<a href="/register.html">立即注册</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/simple-api.js"></script>
+    <script>
+        const form = document.getElementById('loginForm');
+        const errorDiv = document.getElementById('error');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Hide error
+            errorDiv.classList.remove('show');
+            errorDiv.textContent = '';
+
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.textContent = '登录中...';
+
+            try {
+                await API.login(username, password);
+
+                // Save username
+                Storage.setUser(username);
+
+                // Create or get chat session
+                try {
+                    const chatId = await API.createChat(username);
+                    Storage.setChatId(chatId);
+                } catch (chatError) {
+                    console.warn('Failed to create chat, will create on chat page', chatError);
+                }
+
+                // Redirect to chat page
+                window.location.href = '/chat.html';
+            } catch (error) {
+                errorDiv.textContent = error.message || '登录失败，请检查用户名和密码';
+                errorDiv.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '登录';
+            }
+        });
+
+        // Auto-focus username field
+        document.getElementById('username').focus();
+    </script>
+</body>
+</html>
