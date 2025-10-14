@@ -167,21 +167,30 @@ private:
     }
 
     // 将新接受的客户端连接添加到epoll监听中，并关联SSL对象。
-    void addClientToEpoll(int client_fd, SSL* ssl) {
-        struct epoll_event event = {0};
-        event.events = EPOLLIN | EPOLLET; // 监听读事件，边缘触发模式。
-        event.data.fd = client_fd; // 关联客户端的文件描述符。
-        // 尝试将客户端socket添加到epoll监听。
-        if (epoll_ctl(epollfd, EPOLL_CTL_ADD, client_fd, &event) != 0) {
-            LOG_ERROR("Failed to add client socket to epoll"); // 如果操作失败，记录错误日志。
-            SSL_free(ssl); // 释放SSL对象。
-            close(client_fd); // 关闭客户端连接。
+void addClientToEpoll(int client_fd, SSL* ssl) {
+    struct epoll_event event = {0};
+    event.events = EPOLLIN | EPOLLET; // 例如，恢复为监听读事件
+    event.data.fd = client_fd;
+    
+    // 使用 MOD 确保更新已有条目
+    if (epoll_ctl(epollfd, EPOLL_CTL_MOD, client_fd, &event) != 0) {
+        // 如果 MOD 失败且原因是条目不存在，则尝试 ADD
+        if (errno == ENOENT) {
+            if (epoll_ctl(epollfd, EPOLL_CTL_ADD, client_fd, &event) != 0) {
+                LOG_ERROR("Failed to add client socket to epoll");
+                SSL_free(ssl);
+                close(client_fd);
+                return;
+            }
         } else {
-            addSSLToMap(client_fd, ssl); // 将SSL对象与客户端连接关联。
-            LOG_INFO("Added new client to epoll and ssl map"); // 记录日志信息。
+            LOG_ERROR("Epoll_ctl MOD failed: %s", strerror(errno));
+            SSL_free(ssl);
+            close(client_fd);
+            return;
         }
     }
-
+    addSSLToMap(client_fd, ssl);
+}
     // 处理HTTP请求，包括解析请求、路由处理、通过SSL发送响应。
     void processRequest(const char* buffer, int fd, SSL* ssl) {
         HttpRequest request; // 创建HTTP请求对象。

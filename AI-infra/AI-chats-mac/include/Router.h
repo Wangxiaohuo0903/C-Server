@@ -10,6 +10,34 @@
 #include "inference/ModelManager.h"
 
 /*==========================================================
+ * JSON转义辅助函数
+ *=========================================================*/
+inline std::string escapeJson(const std::string& s) {
+    std::string result;
+    result.reserve(s.size() + 20);
+    for (char c : s) {
+        switch (c) {
+            case '\"': result += "\\\""; break;
+            case '\\': result += "\\\\"; break;
+            case '\n': result += "\\n"; break;
+            case '\r': result += "\\r"; break;
+            case '\t': result += "\\t"; break;
+            default:
+                if (c < 32) {
+                    // 其他控制字符用 \uXXXX 编码
+                    char buf[8];
+                    snprintf(buf, sizeof(buf), "\\u%04x", (unsigned char)c);
+                    result += buf;
+                } else {
+                    result += c;
+                }
+                break;
+        }
+    }
+    return result;
+}
+
+/*==========================================================
  * Extremely simple router (exact match + /chat/{id})
  * 只有精确匹配和一个简单的动态 /chat/{id} 路由
  *=========================================================*/
@@ -173,16 +201,38 @@ inline void Router::setupChatRoutes(Database& db, ModelManager& mm) {
             std::string ans = mm.infer(user + "-" + std::to_string(cid),
                                        prompt, 256, 0.7f);
             db.addMessage(cid, "assistant", ans);
-            // 返回 JSON 结果
+            // 返回 JSON 结果（转义特殊字符）
             HttpResponse resp(200);
             resp.setHeader("Content-Type", "application/json");
-            resp.setBody("{\"answer\":\"" + ans + "\"}");
+            resp.setBody("{\"answer\":\"" + escapeJson(ans) + "\"}");
             return resp;
         }
         catch (const std::exception& e) {
             std::cerr << "[/infer] EXCEPTION: " << e.what() << "\n";
             return HttpResponse::makeErrorResponse(500, "server error");
         }
+    });
+
+    /* --- GET /api/cache_stats --- 获取前缀缓存统计信息 --- */
+    addRoute("GET", "/api/cache_stats", [&mm](const HttpRequest&) {
+        auto stats = mm.getCacheStats();
+        std::ostringstream oss;
+        oss << "{"
+            << "\"cache_size\":" << stats.cache_size << ","
+            << "\"total_hits\":" << stats.total_hits << ","
+            << "\"total_requests\":" << stats.total_requests << ","
+            << "\"hit_rate\":" << (stats.hit_rate * 100.0)
+            << "}";
+        HttpResponse resp(200);
+        resp.setHeader("Content-Type", "application/json");
+        resp.setBody(oss.str());
+        return resp;
+    });
+
+    /* --- POST /api/clear_cache --- 清空前缀缓存 --- */
+    addRoute("POST", "/api/clear_cache", [&mm](const HttpRequest&) {
+        mm.clearPrefixCache();
+        return HttpResponse::makeOkResponse("cache cleared");
     });
 }
 

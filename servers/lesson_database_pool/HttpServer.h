@@ -48,6 +48,7 @@ public:
             return response;
         });
         router.setupDatabaseRoutes(db);
+        router.setupFileRoutes("uploads");
     }
 
 private:

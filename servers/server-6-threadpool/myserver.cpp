@@ -9,13 +9,14 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <chrono>
+#include <cmath>
 #include <sstream>
 #include "Logger.h"
 #include "Database.h"
 #include "ThreadPool.h"
 
-#define PORT 8080
+#define PORT 8082
 #define MAX_EVENTS 10
 
 using RequestHandler = std::function<std::string(const std::string&)>;
@@ -95,6 +96,35 @@ void setupRoutes() {
         } else {
             return "Login Failed!";
         }
+    };
+        // 模拟 I/O 密集型任务
+    get_routes["/test_io"] = [](const std::string& request) {
+        // 模拟一个耗时的 I/O 操作（例如睡眠 100 毫秒）
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        // 返回响应
+        return "Test endpoint with simulated I/O delay";
+    };
+
+    // 模拟 CPU 密集型任务
+    get_routes["/test_cpu"] = [](const std::string& request) {
+        // 模拟一个CPU密集型任务，例如计算大量质数
+        volatile long long sum = 0;  // 使用 volatile 防止编译器优化
+        for (long long i = 2; i < 1000000; ++i) {
+            bool is_prime = true;
+            for (long long j = 2; j <= std::sqrt(i); ++j) {
+                if (i % j == 0) {
+                    is_prime = false;
+                    break;
+                }
+            }
+            if (is_prime) {
+                sum += i;  // 累加质数
+            }
+        }
+
+        // 返回响应
+        return "Test endpoint with simulated CPU-intensive task";
     };
      // TODO: 添加其他路径和处理函数
 }

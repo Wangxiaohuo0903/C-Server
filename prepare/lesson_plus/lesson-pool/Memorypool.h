@@ -3,14 +3,14 @@
 #include <mutex>
 #include <atomic>
 
-// 模板类 ObjectPool，用于管理对象的复用
+// 模板类 MemoryPool，用于管理对象的复用
 template <typename T>
-class ObjectPool {
+class MemoryPool {
 public:
     // 构造函数，初始化内存池
     // initial_size: 初始池中对象的数量
     // max_pool_size: 池中允许的最大对象数量
-    ObjectPool(size_t initial_size = 100, size_t max_pool_size = 1000)
+    MemoryPool(size_t initial_size = 100, size_t max_pool_size = 1000)
         : max_size_(max_pool_size),
           allocated_(0) { // 初始化已分配对象计数为0
         // 预先创建 initial_size 个对象，并将它们加入池中

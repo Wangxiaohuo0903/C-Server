@@ -59,19 +59,21 @@ bool ModelManager::loadModel(const std::string& path, int n_ctx, int n_threads) 
 }
 
 // =========== 单轮推理（底层，无历史） ===========
-std::string ModelManager::raw_infer(const std::string& prompt, int maxTokens, float temperature) const {
+std::string ModelManager::raw_infer(const std::string& prompt, int maxTokens, float temperature, int prefix_kv_len) const {
     // 打印 prompt 长度
-    std::cerr << "[run] prompt bytes=" << prompt.size() << "  maxTok=" << maxTokens << '\n';
+    std::cerr << "[run] prompt bytes=" << prompt.size() << "  maxTok=" << maxTokens << "  prefix_kv=" << prefix_kv_len << '\n';
 
-    // 0. 使用持久的 context，清空 KV cache
+    // 0. 使用持久的 context
     if (!ctx_) return "[no_ctx]";
 
-    // 清空 KV cache 以重新开始推理
-    llama_kv_cache_clear(ctx_);
+    // 如果没有前缀缓存，清空 KV cache；否则保留前缀部分
+    if (prefix_kv_len == 0) {
+        llama_kv_cache_clear(ctx_);
+    }
 
     const llama_vocab* vocab = llama_model_get_vocab(model_);
 
-    // 1. tokenize
+    // 1. tokenize 完整prompt
     std::vector<llama_token> tokBuf(prompt.size() * 4);
     int nTok = llama_tokenize(
         vocab, prompt.c_str(), (int)prompt.size(),
@@ -82,21 +84,31 @@ std::string ModelManager::raw_infer(const std::string& prompt, int maxTokens, fl
     tokBuf.resize(nTok);
     std::cerr << "[run] nTok=" << nTok << '\n';
 
-    // 2. 推 prompt
-    llama_batch full = llama_batch_init(nTok, 0, 1);
-    for (int i = 0; i < nTok; ++i) {
-        full.token[i]     = tokBuf[i];
-        full.pos[i]       = i;
-        full.seq_id[i][0] = 0;
-        full.n_seq_id[i]  = 1;
-        full.logits[i]    = (i == nTok - 1);
-    }
-    full.n_tokens = nTok;
-    if (llama_decode(ctx_, full) != 0) {
+    // 2. 推 prompt（跳过已缓存的前缀部分）
+    int start_idx = (prefix_kv_len > 0 && prefix_kv_len < nTok) ? prefix_kv_len : 0;
+    int tokens_to_process = nTok - start_idx;
+
+    if (tokens_to_process > 0) {
+        std::cerr << "[run] processing tokens [" << start_idx << ", " << nTok << "), count=" << tokens_to_process << '\n';
+
+        llama_batch full = llama_batch_init(tokens_to_process, 0, 1);
+        for (int i = 0; i < tokens_to_process; ++i) {
+            int tok_idx = start_idx + i;
+            full.token[i]     = tokBuf[tok_idx];
+            full.pos[i]       = tok_idx;
+            full.seq_id[i][0] = 0;
+            full.n_seq_id[i]  = 1;
+            full.logits[i]    = (i == tokens_to_process - 1);
+        }
+        full.n_tokens = tokens_to_process;
+        if (llama_decode(ctx_, full) != 0) {
+            llama_batch_free(full);
+            return "[decode_prompt_fail]";
+        }
         llama_batch_free(full);
-        return "[decode_prompt_fail]";
+    } else {
+        std::cerr << "[run] fully cached! skip prompt processing\n";
     }
-    llama_batch_free(full);
 
     // 3. 生成
     int nPast = nTok;
@@ -162,11 +174,44 @@ std::string ModelManager::infer(const std::string& chat_id, const std::string& u
     {
         std::lock_guard<std::mutex> g(chat_mutex_);
         prompt = chat_sessions_[chat_id].makePrompt();
-
     }
 
-    // 3. 生成
-    std::string output = raw_infer(prompt, maxTokens, temperature);
+    // ============ 前缀缓存优化 ============
+    // 提取前缀（第一轮对话前的部分，通常是system prompt + 第一个user消息）
+    // 简化版：将第一个 <|assistant|> 之前的内容作为前缀
+    std::string prefix;
+    int prefix_kv_len = 0;
+    size_t first_assistant = prompt.find("<|assistant|>");
+
+    // 只有在历史对话较长时才启用前缀缓存（至少2轮以上）
+    if (first_assistant != std::string::npos && first_assistant > 50) {
+        // 找倒数第二个 <|user|>（最后一个user消息之前的内容作为前缀）
+        size_t last_user = prompt.rfind("<|user|>");
+        if (last_user != std::string::npos && last_user > 0) {
+            prefix = prompt.substr(0, last_user);
+
+            // 尝试从缓存中查找
+            prefix_kv_len = findPrefixCache(prefix);
+        }
+    }
+
+    // 3. 生成（使用前缀缓存）
+    std::string output = raw_infer(prompt, maxTokens, temperature, prefix_kv_len);
+
+    // 4. 如果是第一次遇到这个前缀，保存到缓存
+    if (!prefix.empty() && prefix_kv_len == 0) {
+        // 计算前缀的token数量（需要tokenize）
+        const llama_vocab* vocab = llama_model_get_vocab(model_);
+        std::vector<llama_token> tokBuf(prefix.size() * 4);
+        int nTok = llama_tokenize(
+            vocab, prefix.c_str(), (int)prefix.size(),
+            tokBuf.data(), (int)tokBuf.size(),
+            true, false
+        );
+        if (nTok > 0) {
+            savePrefixCache(prefix, nTok);
+        }
+    }
 
     // 4. 截断到下一个 <|user|> 或 <|endoftext|>
     size_t stop_angle = output.find('<');
@@ -221,4 +266,113 @@ std::string ModelManager::infer(const std::string& chat_id, const std::string& u
 void ModelManager::dropSession(const std::string& chat_id) {
     std::lock_guard<std::mutex> g(chat_mutex_);
     chat_sessions_.erase(chat_id);
+}
+
+// =========== 前缀缓存实现 ===========
+
+// 查找前缀缓存
+int ModelManager::findPrefixCache(const std::string& prefix) {
+    std::lock_guard<std::mutex> g(cache_mutex_);
+    total_cache_requests_++;
+
+    auto it = prefix_cache_.find(prefix);
+    if (it != prefix_cache_.end()) {
+        // 命中！复制KV到seq_id=0（当前推理序列）
+        std::cerr << "[PrefixCache] HIT! prefix_len=" << prefix.size()
+                  << " kv_len=" << it->second.kv_length
+                  << " hit_count=" << it->second.hit_count << '\n';
+
+        // 使用llama.cpp的seq复制功能
+        llama_kv_cache_seq_rm(ctx_, 0, 0, -1);  // 清空seq_id=0
+        llama_kv_cache_seq_cp(ctx_, it->second.seq_id, 0, 0, it->second.kv_length);
+
+        // 更新统计
+        it->second.last_used_ns = PrefixCacheEntry::getCurrentTimeNs();
+        it->second.hit_count++;
+        total_cache_hits_++;
+
+        return it->second.kv_length;
+    }
+
+    std::cerr << "[PrefixCache] MISS for prefix_len=" << prefix.size() << '\n';
+    return 0;
+}
+
+// 保存前缀到缓存
+void ModelManager::savePrefixCache(const std::string& prefix, int kv_length) {
+    std::lock_guard<std::mutex> g(cache_mutex_);
+
+    // 检查是否需要淘汰
+    if (prefix_cache_.size() >= MAX_PREFIX_CACHE) {
+        evictLRU();
+    }
+
+    // 分配新序列ID
+    int seq_id = next_seq_id_++;
+
+    // 复制当前KV cache（seq_id=0）到新序列
+    llama_kv_cache_seq_cp(ctx_, 0, seq_id, 0, kv_length);
+
+    // 保存缓存条目
+    prefix_cache_[prefix] = PrefixCacheEntry(prefix, seq_id, kv_length);
+
+    std::cerr << "[PrefixCache] SAVED prefix_len=" << prefix.size()
+              << " kv_len=" << kv_length
+              << " seq_id=" << seq_id
+              << " (total=" << prefix_cache_.size() << ")\n";
+}
+
+// LRU淘汰
+void ModelManager::evictLRU() {
+    if (prefix_cache_.empty()) return;
+
+    // 找到最久未使用的条目
+    auto oldest = prefix_cache_.begin();
+    for (auto it = prefix_cache_.begin(); it != prefix_cache_.end(); ++it) {
+        if (it->second.last_used_ns < oldest->second.last_used_ns) {
+            oldest = it;
+        }
+    }
+
+    std::cerr << "[PrefixCache] EVICT seq_id=" << oldest->second.seq_id
+              << " hit_count=" << oldest->second.hit_count
+              << " prefix_len=" << oldest->first.size() << '\n';
+
+    // 删除该序列的KV cache
+    llama_kv_cache_seq_rm(ctx_, oldest->second.seq_id, 0, -1);
+
+    // 从缓存中移除
+    prefix_cache_.erase(oldest);
+}
+
+// 获取缓存统计
+ModelManager::CacheStats ModelManager::getCacheStats() const {
+    std::lock_guard<std::mutex> g(cache_mutex_);
+
+    CacheStats stats;
+    stats.cache_size = prefix_cache_.size();
+    stats.total_hits = total_cache_hits_;
+    stats.total_requests = total_cache_requests_;
+    stats.hit_rate = (total_cache_requests_ > 0)
+                     ? (double)total_cache_hits_ / total_cache_requests_
+                     : 0.0;
+
+    return stats;
+}
+
+// 清空所有前缀缓存
+void ModelManager::clearPrefixCache() {
+    std::lock_guard<std::mutex> g(cache_mutex_);
+
+    // 清理所有缓存序列的KV
+    for (const auto& entry : prefix_cache_) {
+        llama_kv_cache_seq_rm(ctx_, entry.second.seq_id, 0, -1);
+    }
+
+    prefix_cache_.clear();
+    next_seq_id_ = 1;
+    total_cache_hits_ = 0;
+    total_cache_requests_ = 0;
+
+    std::cerr << "[PrefixCache] CLEARED all caches\n";
 }

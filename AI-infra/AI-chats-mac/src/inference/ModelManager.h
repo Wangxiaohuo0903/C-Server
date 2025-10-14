@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <mutex>
 #include <sstream>
+#include <chrono>
+#include <cstdint>
 
 // ------------------ 对话消息结构 ------------------
 // 每条消息包含角色（user/assistant/system）和内容
@@ -69,6 +71,29 @@ private:
     }
 };
 
+// ------------------ 前缀缓存条目 ------------------
+struct PrefixCacheEntry {
+    std::string prefix_text;      // 前缀文本（用于匹配）
+    int seq_id;                   // llama.cpp 序列ID
+    int kv_length;                // 前缀对应的token数量
+    uint64_t last_used_ns;        // 最后使用时间（纳秒）
+    uint32_t hit_count;           // 命中次数
+
+    PrefixCacheEntry()
+        : seq_id(0), kv_length(0), last_used_ns(0), hit_count(0) {}
+
+    PrefixCacheEntry(const std::string& text, int sid, int len)
+        : prefix_text(text), seq_id(sid), kv_length(len),
+          last_used_ns(getCurrentTimeNs()), hit_count(1) {}
+
+    // 获取当前时间（纳秒）
+    static uint64_t getCurrentTimeNs() {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()
+        ).count();
+    }
+};
+
 class ModelManager {
 public:
     // 单例接口：全局共享一个 ModelManager 实例
@@ -93,6 +118,30 @@ public:
     // 清理指定会话历史
     void dropSession(const std::string& chat_id);
 
+    // ============ 前缀缓存接口 ============
+
+    // 查找前缀缓存，如果命中返回已缓存的token数量，否则返回0
+    // prefix: 前缀文本
+    // 返回: 命中的token数量（0表示未命中）
+    int findPrefixCache(const std::string& prefix);
+
+    // 保存前缀到缓存
+    // prefix: 前缀文本
+    // kv_length: 该前缀对应的token数量
+    void savePrefixCache(const std::string& prefix, int kv_length);
+
+    // 获取缓存统计信息
+    struct CacheStats {
+        size_t cache_size;        // 当前缓存条目数
+        uint64_t total_hits;      // 总命中次数
+        uint64_t total_requests;  // 总请求次数
+        double hit_rate;          // 命中率
+    };
+    CacheStats getCacheStats() const;
+
+    // 清空所有前缀缓存
+    void clearPrefixCache();
+
 private:
     ModelManager();
     ~ModelManager();
@@ -112,8 +161,28 @@ private:
     std::unordered_map<std::string, ChatSession> chat_sessions_;
     std::mutex chat_mutex_;
 
+    // ============ 前缀缓存相关 ============
+    // 前缀缓存池：key为前缀文本，value为缓存条目
+    std::unordered_map<std::string, PrefixCacheEntry> prefix_cache_;
+    mutable std::mutex cache_mutex_;  // mutable因为getCacheStats是const
+
+    // 序列ID分配（seq_id=0留给当前推理）
+    int next_seq_id_ = 1;
+
+    // 缓存限制
+    static constexpr size_t MAX_PREFIX_CACHE = 32;  // 最多缓存32个前缀
+
+    // 统计信息
+    mutable uint64_t total_cache_hits_ = 0;
+    mutable uint64_t total_cache_requests_ = 0;
+
+    // LRU淘汰：移除最久未使用的缓存条目
+    void evictLRU();
+
     // **内部**单轮推理：不使用历史，只按给定 prompt 一次性生成
+    // prefix_kv_len: 如果>0，表示前prefix_kv_len个token已在KV cache中
     std::string raw_infer(const std::string& prompt,
                           int maxTokens,
-                          float temperature) const;
+                          float temperature,
+                          int prefix_kv_len = 0) const;
 };

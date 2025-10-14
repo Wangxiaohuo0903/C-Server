@@ -1,9 +1,20 @@
-引入Nginx
 
-修改的文件:
-main.cpp
+在主机的终端里执行下面的内容
+# 创建 Docker 网络（如果尚未存在）
+docker network create mynetwork
 
-docker 命令：
-docker run -it -p 8083:8080 -p 8084:8081 my-cpp-server1
-docker ps
-docker exec -it [CONTAINER ID] bash
+
+# 启动 MongoDB 容器
+docker run -d --network mynetwork -p 27017:27017 mongo
+
+# 运行你的服务器的容器（根据你的实际端口占用情况进行修改）
+docker run -it --network mynetwork -p 9002:80 -p 9003:8080 -p 9004:8081 -p 9005:8082 juanbing/juanbing-server2025 bash
+
+进入容器后，在容器的终端内
+cd server-10-MongoDB/
+chmod 777 mongo1.sh 
+./mongo1.sh 
+nginx
+ldconfig
+g++ main.cpp -o myserver  -lsqlite3 -L/usr/local/lib -lmongocxx -lbsoncxx -I/usr/local/include/mongocxx/v_noabi -I/usr/local/include/bsoncxx/v_noabi
+./myserver

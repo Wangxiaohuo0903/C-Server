@@ -12,7 +12,7 @@
 #include "HttpRequest.h"
 #include "HttpResponse.h"
 #include "Database.h"
-#include "ObjectPool.h"  // 引入内存池
+#include "MemoryPool.h"  // 引入内存池
 
 class HttpServer {
 public:
@@ -21,8 +21,8 @@ public:
         : server_fd(-1), epollfd(-1), port(port), max_events(max_events), db(db) {
         // 初始化内存池，预分配100个 HttpRequest 和 HttpResponse 对象
         // 这样可以减少在高并发环境下频繁分配和释放内存带来的开销
-        requestPool = std::make_shared<ObjectPool<HttpRequest>>(100);
-        responsePool = std::make_shared<ObjectPool<HttpResponse>>(100);
+        requestPool = std::make_shared<MemoryPool<HttpRequest>>(100);
+        responsePool = std::make_shared<MemoryPool<HttpResponse>>(100);
     }
 
     // 启动服务器，开始监听并处理传入的连接
@@ -73,8 +73,8 @@ private:
     Database& db;     // 引用数据库实例
 
     // 内存池对象，用于管理 HttpRequest 和 HttpResponse 对象的分配和回收
-    std::shared_ptr<ObjectPool<HttpRequest>> requestPool;
-    std::shared_ptr<ObjectPool<HttpResponse>> responsePool;
+    std::shared_ptr<MemoryPool<HttpRequest>> requestPool;
+    std::shared_ptr<MemoryPool<HttpResponse>> responsePool;
 
     // 设置服务器套接字，包括创建、绑定和监听
     void setupServerSocket() {

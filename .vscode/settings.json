@@ -66,7 +66,18 @@
         "memory": "cpp",
         "forward_list": "cpp",
         "print": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "version": "cpp",
+        "any": "cpp",
+        "cinttypes": "cpp",
+        "codecvt": "cpp",
+        "csignal": "cpp",
+        "list": "cpp",
+        "regex": "cpp",
+        "set": "cpp",
+        "span": "cpp",
+        "unordered_set": "cpp",
+        "valarray": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
