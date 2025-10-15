@@ -135,7 +135,7 @@ std::string ModelManager::raw_infer(const std::string& prompt, int maxTokens, fl
 
     char piece[256] = {0};
     llama_token_to_piece(vocab, best, piece, sizeof(piece), 0, false);
-    std::cerr << "[run] step " << step << " tok " << best << " \"" << piece << "\"\n";
+    // std::cerr << "[run] step " << step << " tok " << best << " \"" << piece << "\"\n";  // 注释掉减少日志输出
 
     // 停止条件
     if (best == eos || piece[0] == '<')
@@ -192,11 +192,26 @@ std::string ModelManager::infer(const std::string& chat_id, const std::string& u
             // 有至少2轮对话，提取第一轮作为前缀
             prefix = prompt.substr(0, second_user_pos);
 
-            std::cerr << "[PrefixExtract] Extracted prefix up to 2nd user, len=" << prefix.size() << '\n';
+            std::cerr << "\n[PrefixExtract] ===== Prefix Extraction =====\n";
+            std::cerr << "[PrefixExtract] Chat ID: " << chat_id << '\n';
+            std::cerr << "[PrefixExtract] Full prompt length: " << prompt.size() << " bytes\n";
+            std::cerr << "[PrefixExtract] Extracted prefix length: " << prefix.size() << " bytes\n";
+            std::cerr << "[PrefixExtract] Prefix preview: " << prefix.substr(0, std::min(size_t(100), prefix.size())) << "...\n";
 
             // 尝试从缓存中查找
             prefix_kv_len = findPrefixCache(prefix);
+
+            if (prefix_kv_len > 0) {
+                std::cerr << "[PrefixExtract] ✓ CACHE HIT! Skipping " << prefix_kv_len << " tokens\n";
+            } else {
+                std::cerr << "[PrefixExtract] ✗ CACHE MISS, will save after inference\n";
+            }
+            std::cerr << "[PrefixExtract] =============================\n\n";
+        } else {
+            std::cerr << "[PrefixExtract] Only 1 round, skipping cache (need ≥2 rounds)\n";
         }
+    } else {
+        std::cerr << "[PrefixExtract] No assistant reply yet, skipping cache\n";
     }
 
     // 3. 生成（使用前缀缓存）
@@ -282,23 +297,34 @@ int ModelManager::findPrefixCache(const std::string& prefix) {
     auto it = prefix_cache_.find(prefix);
     if (it != prefix_cache_.end()) {
         // 命中！复制KV到seq_id=0（当前推理序列）
-        std::cerr << "[PrefixCache] HIT! prefix_len=" << prefix.size()
+        auto now = PrefixCacheEntry::getCurrentTimeNs();
+        auto age_ms = (now - it->second.last_used_ns) / 1000000;
+
+        std::cerr << "[PrefixCache] ✓ HIT! "
+                  << "seq_id=" << it->second.seq_id
                   << " kv_len=" << it->second.kv_length
-                  << " hit_count=" << it->second.hit_count << '\n';
+                  << " hit_count=" << it->second.hit_count
+                  << " age=" << age_ms << "ms"
+                  << " (cache_size=" << prefix_cache_.size() << ")\n";
 
         // 使用llama.cpp的seq复制功能
         llama_kv_cache_seq_rm(ctx_, 0, 0, -1);  // 清空seq_id=0
         llama_kv_cache_seq_cp(ctx_, it->second.seq_id, 0, 0, it->second.kv_length);
 
         // 更新统计
-        it->second.last_used_ns = PrefixCacheEntry::getCurrentTimeNs();
+        it->second.last_used_ns = now;
         it->second.hit_count++;
         total_cache_hits_++;
+
+        double hit_rate = (double)total_cache_hits_ / total_cache_requests_ * 100.0;
+        std::cerr << "[PrefixCache] Current hit rate: " << hit_rate << "% ("
+                  << total_cache_hits_ << "/" << total_cache_requests_ << ")\n";
 
         return it->second.kv_length;
     }
 
-    std::cerr << "[PrefixCache] MISS for prefix_len=" << prefix.size() << '\n';
+    std::cerr << "[PrefixCache] ✗ MISS for prefix_len=" << prefix.size()
+              << " (cache_size=" << prefix_cache_.size() << ")\n";
     return 0;
 }
 

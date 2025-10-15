@@ -1,0 +1,36 @@
+🔍 简化版前缀缓存测试
+============================================================
+✓ Logged in as bench_user
+✓ Cache cleared
+✓ Created chat_id: 35
+
+第1轮：初始对话（无缓存）
+  Round latency: 388ms
+  Answer preview: Python is a high-level, interpreted, object-oriented programming language that i...
+
+第2轮：继续对话（保存前缀到缓存）
+  Round latency: 1447ms
+  Answer preview: Variables are data storage units in Python. They allow you to store and manipula...
+
+第3轮：继续对话（应该命中缓存！）
+  Round latency: 1453ms
+  Answer preview: Loops are a type of program control structure in Python. They allow you to repea...
+
+📊 Cache stats:
+  Cache size: 1
+  Total hits: 1
+  Total requests: 2
+  Hit rate: 5000.0%
+
+============================================================
+📈 结果分析:
+  Round 1 latency: 388ms (baseline, no cache)
+  Round 2 latency: 1447ms (saving prefix)
+  Round 3 latency: 1453ms (cache hit expected!)
+
+✅ 缓存生效！
+  Hit rate: 5000.0%
+  Speedup (Round 2 vs 3): 1.00x
+  Latency reduction: -0.4%
+
+✅ 测试完成！
