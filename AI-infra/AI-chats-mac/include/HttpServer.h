@@ -52,23 +52,86 @@ public:
 
     /** 注册推理相关路由：/infer, /reset */
     void setupInferRoute() {
-        // POST /infer 接收 JSON {"prompt": "...", "chat_id":"..."}，返回 {"answer":"..."}
+        // POST /infer 接收 JSON {"user_message": "...", "chat_id":"...", "max_tokens":..., "temperature":...}
+        // 也兼容旧格式 {"prompt": "..."}
         router.addRoute("POST", "/infer", [](const HttpRequest& req) {
-            auto prompt  = req.parseJsonField("prompt");
-            auto chatId  = req.parseJsonField("chat_id");
-            if (prompt.empty()) {
-                return HttpResponse::makeErrorResponse(400, "prompt required");
+            try {
+                std::cerr << "[/infer] Request received, body length: " << req.getBody().size() << std::endl;
+
+                // 使用通用JSON解析器（支持字符串和数字）
+                auto json = req.parseJson();
+                std::cerr << "[/infer] JSON parsed, fields count: " << json.size() << std::endl;
+
+                // 优先使用 user_message，如果没有则用 prompt（向后兼容）
+                std::string userMsg;
+                if (json.count("user_message")) {
+                    userMsg = json["user_message"];
+                } else if (json.count("prompt")) {
+                    userMsg = json["prompt"];
+                }
+
+                if (userMsg.empty()) {
+                    return HttpResponse::makeErrorResponse(400, "user_message or prompt required");
+                }
+
+                std::string chatId = "default";
+                if (json.count("chat_id") && !json["chat_id"].empty()) {
+                    chatId = json["chat_id"];
+                }
+
+                // 解析可选参数（如果不存在则使用默认值）
+                int maxTokens = 64;
+                float temperature = 0.7f;
+
+                if (json.count("max_tokens") && !json["max_tokens"].empty()) {
+                    std::string maxTokStr = json["max_tokens"];
+                    std::cerr << "[/infer] max_tokens raw value: [" << maxTokStr << "] len=" << maxTokStr.size() << std::endl;
+                    try {
+                        maxTokens = std::stoi(maxTokStr);
+                        std::cerr << "[/infer] max_tokens parsed: " << maxTokens << std::endl;
+                    } catch (const std::exception& e) {
+                        std::cerr << "[/infer] Failed to parse max_tokens: [" << maxTokStr << "] error: " << e.what() << std::endl;
+                        maxTokens = 64;
+                    }
+                }
+
+                if (json.count("temperature") && !json["temperature"].empty()) {
+                    std::string tempStr = json["temperature"];
+                    std::cerr << "[/infer] temperature raw value: [" << tempStr << "] len=" << tempStr.size() << std::endl;
+                    try {
+                        temperature = std::stof(tempStr);
+                        std::cerr << "[/infer] temperature parsed: " << temperature << std::endl;
+                    } catch (const std::exception& e) {
+                        std::cerr << "[/infer] Failed to parse temperature: [" << tempStr << "] error: " << e.what() << std::endl;
+                        temperature = 0.7f;
+                    }
+                }
+
+                // 输出调试信息
+                std::cerr << "[/infer] Final parameters:" << std::endl;
+                std::cerr << "  chat_id: " << chatId << std::endl;
+                std::cerr << "  user_message: " << userMsg.substr(0, std::min(size_t(50), userMsg.size())) << "..." << std::endl;
+                std::cerr << "  max_tokens: " << maxTokens << std::endl;
+                std::cerr << "  temperature: " << temperature << std::endl;
+
+                // 单例模型管理器，用 chatId 区分会话
+                auto& mgr = ModelManager::instance();
+                std::cerr << "[/infer] Calling ModelManager::infer..." << std::endl;
+                std::string answer = mgr.infer(chatId, userMsg, maxTokens, temperature);
+                std::cerr << "[/infer] Inference completed, answer length: " << answer.size() << std::endl;
+
+                HttpResponse r(200);
+                r.setHeader("Content-Type", "application/json");
+                r.setBody("{\"answer\":\"" + answer + "\"}");
+                return r;
+
+            } catch (const std::exception& e) {
+                std::cerr << "[/infer] EXCEPTION: " << e.what() << std::endl;
+                return HttpResponse::makeErrorResponse(500, std::string("error: ") + e.what());
+            } catch (...) {
+                std::cerr << "[/infer] EXCEPTION (unknown)" << std::endl;
+                return HttpResponse::makeErrorResponse(500, "unknown error");
             }
-            if (chatId.empty()) chatId = "default";
-
-            // 单例模型管理器，用 chatId 区分会话
-            auto& mgr = ModelManager::instance();
-            std::string answer = mgr.infer(chatId, prompt, /*maxTokens=*/64, /*temp=*/0.7f);
-
-            HttpResponse r(200);
-            r.setHeader("Content-Type", "application/json");
-            r.setBody("{\"answer\":\"" + answer + "\"}");
-            return r;
         });
 
         // POST /reset 重置会话 KV cache
@@ -94,7 +157,9 @@ public:
         // 1) 注册 HTTP 路由
         setupRoutes();
         setupInferRoute();
-        router.setupChatRoutes(db, ModelManager::instance());
+        // 注意：setupChatRoutes 也包含一个旧的 /infer 路由，会覆盖 setupInferRoute
+        // 所以这里不调用 setupChatRoutes，只使用新的 /infer 实现
+        // router.setupChatRoutes(db, ModelManager::instance());
         router.setupStaticPages();
 
         // 2) 创建固定大小线程池

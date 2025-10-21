@@ -7,6 +7,7 @@
 #include <sstream>
 #include <chrono>
 #include <cstdint>
+#include "PrefixTree.h"  // Prefix Tree for improved cache matching
 
 // ------------------ 对话消息结构 ------------------
 // 每条消息包含角色（user/assistant/system）和内容
@@ -142,6 +143,10 @@ public:
     // 清空所有前缀缓存
     void clearPrefixCache();
 
+    // 预热缓存：预先计算常用模板的KV cache
+    // prompts: 常用的system prompt列表
+    void warmupCache(const std::vector<std::string>& prompts);
+
 private:
     ModelManager();
     ~ModelManager();
@@ -162,8 +167,8 @@ private:
     std::mutex chat_mutex_;
 
     // ============ 前缀缓存相关 ============
-    // 前缀缓存池：key为前缀文本，value为缓存条目
-    std::unordered_map<std::string, PrefixCacheEntry> prefix_cache_;
+    // Prefix Tree: 替代哈希表，支持部分前缀匹配
+    PrefixTree prefix_tree_;
     mutable std::mutex cache_mutex_;  // mutable因为getCacheStats是const
 
     // 序列ID分配（seq_id=0留给当前推理）
@@ -176,8 +181,8 @@ private:
     mutable uint64_t total_cache_hits_ = 0;
     mutable uint64_t total_cache_requests_ = 0;
 
-    // LRU淘汰：移除最久未使用的缓存条目
-    void evictLRU();
+    // Tokenize: 将文本转换为token序列
+    std::vector<int> tokenize(const std::string& text) const;
 
     // **内部**单轮推理：不使用历史，只按给定 prompt 一次性生成
     // prefix_kv_len: 如果>0，表示前prefix_kv_len个token已在KV cache中

@@ -287,54 +287,85 @@ void ModelManager::dropSession(const std::string& chat_id) {
     chat_sessions_.erase(chat_id);
 }
 
-// =========== 前缀缓存实现 ===========
+// =========== 前缀缓存实现 (Prefix Tree) ===========
 
-// 查找前缀缓存
+// Tokenize辅助函数
+std::vector<int> ModelManager::tokenize(const std::string& text) const {
+    if (!model_) return {};
+
+    const llama_vocab* vocab = llama_model_get_vocab(model_);
+    std::vector<llama_token> tokBuf(text.size() * 4);
+    int nTok = llama_tokenize(
+        vocab, text.c_str(), (int)text.size(),
+        tokBuf.data(), (int)tokBuf.size(),
+        true, false
+    );
+
+    if (nTok < 1) return {};
+
+    std::vector<int> result(nTok);
+    for (int i = 0; i < nTok; i++) {
+        result[i] = tokBuf[i];
+    }
+    return result;
+}
+
+// 查找前缀缓存 (Prefix Tree版本)
 int ModelManager::findPrefixCache(const std::string& prefix) {
     std::lock_guard<std::mutex> g(cache_mutex_);
     total_cache_requests_++;
 
-    auto it = prefix_cache_.find(prefix);
-    if (it != prefix_cache_.end()) {
-        // 命中！复制KV到seq_id=0（当前推理序列）
-        auto now = PrefixCacheEntry::getCurrentTimeNs();
-        auto age_ms = (now - it->second.last_used_ns) / 1000000;
+    // Tokenize前缀
+    auto tokens = tokenize(prefix);
+    if (tokens.empty()) {
+        std::cerr << "[PrefixTree] Tokenize failed\n";
+        return 0;
+    }
 
-        std::cerr << "[PrefixCache] ✓ HIT! "
-                  << "seq_id=" << it->second.seq_id
-                  << " kv_len=" << it->second.kv_length
-                  << " hit_count=" << it->second.hit_count
-                  << " age=" << age_ms << "ms"
-                  << " (cache_size=" << prefix_cache_.size() << ")\n";
+    // 使用Prefix Tree查找最长匹配
+    auto [seq_id, matched_len] = prefix_tree_.findLongestPrefix(tokens);
+
+    if (seq_id >= 0 && matched_len > 0) {
+        // 命中！复制KV到seq_id=0（当前推理序列）
+        std::cerr << "[PrefixTree] ✓ HIT! "
+                  << "seq_id=" << seq_id
+                  << " matched_tokens=" << matched_len << "/" << tokens.size()
+                  << " (cache_size=" << prefix_tree_.size() << ")\n";
 
         // 使用llama.cpp的seq复制功能
         llama_kv_cache_seq_rm(ctx_, 0, 0, -1);  // 清空seq_id=0
-        llama_kv_cache_seq_cp(ctx_, it->second.seq_id, 0, 0, it->second.kv_length);
+        llama_kv_cache_seq_cp(ctx_, seq_id, 0, 0, matched_len);
 
         // 更新统计
-        it->second.last_used_ns = now;
-        it->second.hit_count++;
+        prefix_tree_.updateHit(tokens);
         total_cache_hits_++;
 
         double hit_rate = (double)total_cache_hits_ / total_cache_requests_ * 100.0;
-        std::cerr << "[PrefixCache] Current hit rate: " << hit_rate << "% ("
+        std::cerr << "[PrefixTree] Current hit rate: " << hit_rate << "% ("
                   << total_cache_hits_ << "/" << total_cache_requests_ << ")\n";
 
-        return it->second.kv_length;
+        return matched_len;
     }
 
-    std::cerr << "[PrefixCache] ✗ MISS for prefix_len=" << prefix.size()
-              << " (cache_size=" << prefix_cache_.size() << ")\n";
+    std::cerr << "[PrefixTree] ✗ MISS for " << tokens.size() << " tokens"
+              << " (cache_size=" << prefix_tree_.size() << ")\n";
     return 0;
 }
 
-// 保存前缀到缓存
+// 保存前缀到缓存 (Prefix Tree版本)
 void ModelManager::savePrefixCache(const std::string& prefix, int kv_length) {
     std::lock_guard<std::mutex> g(cache_mutex_);
 
+    // Tokenize前缀
+    auto tokens = tokenize(prefix);
+    if (tokens.empty()) {
+        std::cerr << "[PrefixTree] Tokenize failed, cannot save\n";
+        return;
+    }
+
     // 检查是否需要淘汰
-    if (prefix_cache_.size() >= MAX_PREFIX_CACHE) {
-        evictLRU();
+    if (prefix_tree_.size() >= MAX_PREFIX_CACHE) {
+        prefix_tree_.evictLRU(MAX_PREFIX_CACHE);
     }
 
     // 分配新序列ID
@@ -343,44 +374,21 @@ void ModelManager::savePrefixCache(const std::string& prefix, int kv_length) {
     // 复制当前KV cache（seq_id=0）到新序列
     llama_kv_cache_seq_cp(ctx_, 0, seq_id, 0, kv_length);
 
-    // 保存缓存条目
-    prefix_cache_[prefix] = PrefixCacheEntry(prefix, seq_id, kv_length);
+    // 插入Prefix Tree
+    prefix_tree_.insert(tokens, seq_id);
 
-    std::cerr << "[PrefixCache] SAVED prefix_len=" << prefix.size()
+    std::cerr << "[PrefixTree] SAVED " << tokens.size() << " tokens"
               << " kv_len=" << kv_length
               << " seq_id=" << seq_id
-              << " (total=" << prefix_cache_.size() << ")\n";
+              << " (total=" << prefix_tree_.size() << ")\n";
 }
 
-// LRU淘汰
-void ModelManager::evictLRU() {
-    if (prefix_cache_.empty()) return;
-
-    // 找到最久未使用的条目
-    auto oldest = prefix_cache_.begin();
-    for (auto it = prefix_cache_.begin(); it != prefix_cache_.end(); ++it) {
-        if (it->second.last_used_ns < oldest->second.last_used_ns) {
-            oldest = it;
-        }
-    }
-
-    std::cerr << "[PrefixCache] EVICT seq_id=" << oldest->second.seq_id
-              << " hit_count=" << oldest->second.hit_count
-              << " prefix_len=" << oldest->first.size() << '\n';
-
-    // 删除该序列的KV cache
-    llama_kv_cache_seq_rm(ctx_, oldest->second.seq_id, 0, -1);
-
-    // 从缓存中移除
-    prefix_cache_.erase(oldest);
-}
-
-// 获取缓存统计
+// 获取缓存统计 (Prefix Tree版本)
 ModelManager::CacheStats ModelManager::getCacheStats() const {
     std::lock_guard<std::mutex> g(cache_mutex_);
 
     CacheStats stats;
-    stats.cache_size = prefix_cache_.size();
+    stats.cache_size = prefix_tree_.size();
     stats.total_hits = total_cache_hits_;
     stats.total_requests = total_cache_requests_;
     stats.hit_rate = (total_cache_requests_ > 0)
@@ -390,19 +398,95 @@ ModelManager::CacheStats ModelManager::getCacheStats() const {
     return stats;
 }
 
-// 清空所有前缀缓存
+// 清空所有前缀缓存 (Prefix Tree版本)
 void ModelManager::clearPrefixCache() {
     std::lock_guard<std::mutex> g(cache_mutex_);
 
-    // 清理所有缓存序列的KV
-    for (const auto& entry : prefix_cache_) {
-        llama_kv_cache_seq_rm(ctx_, entry.second.seq_id, 0, -1);
+    // 注意：这里我们无法遍历Prefix Tree获取所有seq_id
+    // 简化处理：清空整个KV cache（seq_id 1到next_seq_id_）
+    for (int sid = 1; sid < next_seq_id_; sid++) {
+        llama_kv_cache_seq_rm(ctx_, sid, 0, -1);
     }
 
-    prefix_cache_.clear();
+    prefix_tree_.clear();
     next_seq_id_ = 1;
     total_cache_hits_ = 0;
     total_cache_requests_ = 0;
 
-    std::cerr << "[PrefixCache] CLEARED all caches\n";
+    std::cerr << "[PrefixTree] CLEARED all caches\n";
+}
+
+// 预热缓存：预先计算常用模板
+void ModelManager::warmupCache(const std::vector<std::string>& prompts) {
+    std::lock_guard<std::mutex> g(mtx_);
+
+    std::cout << "\n🔥 ========== Cache Warmup Started ==========" << std::endl;
+    std::cout << "📝 Warming up " << prompts.size() << " templates..." << std::endl;
+
+    int success_count = 0;
+
+    for (size_t i = 0; i < prompts.size(); i++) {
+        const auto& prompt = prompts[i];
+
+        std::cout << "\n[" << (i+1) << "/" << prompts.size() << "] Processing template:" << std::endl;
+        std::cout << "  📄 Content: " << prompt.substr(0, 60)
+                  << (prompt.size() > 60 ? "..." : "") << std::endl;
+
+        // 1. Tokenize
+        auto tokens = tokenize(prompt);
+        if (tokens.empty()) {
+            std::cerr << "  ❌ Tokenize failed, skipping" << std::endl;
+            continue;
+        }
+
+        std::cout << "  🔢 Tokens: " << tokens.size() << std::endl;
+
+        // 2. 计算KV cache（仅一次前向传播）
+        llama_kv_cache_seq_rm(ctx_, 0, 0, -1);  // 清空seq_id=0
+
+        llama_batch batch = llama_batch_init(tokens.size(), 0, 1);
+        for (size_t j = 0; j < tokens.size(); j++) {
+            batch.token[j]     = tokens[j];
+            batch.pos[j]       = j;
+            batch.seq_id[j][0] = 0;
+            batch.n_seq_id[j]  = 1;
+            batch.logits[j]    = (j == tokens.size() - 1);  // 只有最后一个token需要logits
+        }
+        batch.n_tokens = tokens.size();
+
+        if (llama_decode(ctx_, batch) != 0) {
+            std::cerr << "  ❌ Decode failed, skipping" << std::endl;
+            llama_batch_free(batch);
+            continue;
+        }
+        llama_batch_free(batch);
+
+        // 3. 保存到缓存（复用savePrefixCache逻辑）
+        {
+            std::lock_guard<std::mutex> cache_lock(cache_mutex_);
+
+            // 检查是否需要淘汰
+            if (prefix_tree_.size() >= MAX_PREFIX_CACHE) {
+                prefix_tree_.evictLRU(MAX_PREFIX_CACHE);
+            }
+
+            // 分配新序列ID
+            int seq_id = next_seq_id_++;
+
+            // 复制当前KV cache（seq_id=0）到新序列
+            llama_kv_cache_seq_cp(ctx_, 0, seq_id, 0, tokens.size());
+
+            // 插入Prefix Tree
+            prefix_tree_.insert(tokens, seq_id);
+
+            std::cout << "  ✅ Cached: seq_id=" << seq_id
+                      << " tokens=" << tokens.size() << std::endl;
+            success_count++;
+        }
+    }
+
+    std::cout << "\n🔥 ========== Cache Warmup Complete ==========" << std::endl;
+    std::cout << "✅ Successfully cached: " << success_count << "/" << prompts.size() << " templates" << std::endl;
+    std::cout << "📊 Total cache entries: " << prefix_tree_.size() << std::endl;
+    std::cout << "🔥 ============================================\n" << std::endl;
 }
