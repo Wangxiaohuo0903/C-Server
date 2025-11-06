@@ -4,6 +4,12 @@
 #include <cstring>
 #include <algorithm>
 
+// 简化的日志宏
+#define LOG_INFO(msg) std::cerr << "[INFO] " << msg << std::endl
+#define LOG_WARN(msg) std::cerr << "[WARN] " << msg << std::endl
+#define LOG_ERROR(msg) std::cerr << "[ERROR] " << msg << std::endl
+#define LOG_DEBUG(msg) std::cerr << "[DEBUG] " << msg << std::endl
+
 // ---------- ctor / dtor ----------
 ModelManager::ModelManager()  = default;
 ModelManager::~ModelManager() {
@@ -59,12 +65,32 @@ bool ModelManager::loadModel(const std::string& path, int n_ctx, int n_threads) 
 }
 
 // =========== 单轮推理（底层，无历史） ===========
-std::string ModelManager::raw_infer(const std::string& prompt, int maxTokens, float temperature, int prefix_kv_len) const {
+std::string ModelManager::raw_infer(const std::string& prompt, int maxTokens, float temperature, int prefix_kv_len, bool use_speculative) const {
     // 打印 prompt 长度
     std::cerr << "[run] prompt bytes=" << prompt.size() << "  maxTok=" << maxTokens << "  prefix_kv=" << prefix_kv_len << '\n';
 
     // 0. 使用持久的 context
     if (!ctx_) return "[no_ctx]";
+
+    // ======== 推测式解码路径 ========
+    // 条件: 1) 已启用 2) 用户未禁用 3) 生成长度足够
+    bool should_use_spec = false;
+    {
+        std::lock_guard<std::mutex> lock(spec_mutex_);
+        should_use_spec = use_speculative &&
+                          speculative_decoder_ &&
+                          speculative_decoder_->isLoaded() &&
+                          speculative_decoder_->shouldEnableForTask(maxTokens);
+    }
+
+    if (should_use_spec) {
+        std::cerr << "[run] 🚀 Using SPECULATIVE DECODING\n";
+        return raw_infer_speculative(prompt, maxTokens, temperature, prefix_kv_len);
+    } else {
+        std::cerr << "[run] Using GREEDY DECODING\n";
+    }
+
+    // ======== 原有贪婪解码路径 ========
 
     // 如果没有前缀缓存，清空 KV cache；否则保留前缀部分
     if (prefix_kv_len == 0) {
@@ -489,4 +515,214 @@ void ModelManager::warmupCache(const std::vector<std::string>& prompts) {
     std::cout << "✅ Successfully cached: " << success_count << "/" << prompts.size() << " templates" << std::endl;
     std::cout << "📊 Total cache entries: " << prefix_tree_.size() << std::endl;
     std::cout << "🔥 ============================================\n" << std::endl;
+}
+
+// ============================================================
+// 推测式解码集成
+// ============================================================
+
+bool ModelManager::enableSpeculativeDecoding(
+    const std::string& draft_model_path,
+    const SpeculativeConfig* config
+) {
+    std::lock_guard<std::mutex> lock(spec_mutex_);
+
+    if (speculative_decoder_) {
+        LOG_WARN("Speculative decoding already enabled, disabling first...");
+        speculative_decoder_.reset();
+    }
+
+    if (!model_) {
+        LOG_ERROR("Verifier model not loaded, cannot enable speculative decoding");
+        return false;
+    }
+
+    // 使用提供的配置或默认配置
+    SpeculativeConfig cfg;
+    if (config) {
+        cfg = *config;
+    } else {
+        // 自动检测平台并使用最佳配置
+        #ifdef __APPLE__
+            cfg = SpeculativeConfig::createForAppleSilicon();
+            LOG_INFO("Using Apple Silicon optimized config");
+        #else
+            cfg = SpeculativeConfig::createForCPUOnly();
+            LOG_INFO("Using CPU-only config");
+        #endif
+    }
+
+    cfg.draft_model_path = draft_model_path;
+
+    // 创建SpeculativeDecoder实例
+    speculative_decoder_ = std::make_unique<SpeculativeDecoder>(cfg);
+
+    // 加载draft模型
+    if (!speculative_decoder_->loadDraftModel()) {
+        LOG_ERROR("Failed to load draft model");
+        speculative_decoder_.reset();
+        return false;
+    }
+
+    // 运行兼容性检查
+    auto compat_result = speculative_decoder_->checkCompatibility(model_);
+    if (!compat_result.is_compatible) {
+        LOG_ERROR("Draft/Verifier compatibility check failed!");
+        LOG_ERROR(compat_result.error_message);
+        LOG_ERROR(compat_result.getSummary());
+        speculative_decoder_.reset();
+        return false;
+    }
+
+    LOG_INFO("✓ Speculative decoding enabled successfully");
+    LOG_INFO(compat_result.getSummary());
+
+    return true;
+}
+
+void ModelManager::disableSpeculativeDecoding() {
+    std::lock_guard<std::mutex> lock(spec_mutex_);
+
+    if (!speculative_decoder_) {
+        LOG_WARN("Speculative decoding not enabled");
+        return;
+    }
+
+    LOG_INFO("Disabling speculative decoding...");
+    LOG_INFO(speculative_decoder_->getStatsString());
+
+    speculative_decoder_.reset();
+    LOG_INFO("Speculative decoding disabled");
+}
+
+bool ModelManager::isSpeculativeDecodingEnabled() const {
+    std::lock_guard<std::mutex> lock(spec_mutex_);
+    return speculative_decoder_ && speculative_decoder_->isLoaded();
+}
+
+std::string ModelManager::getSpeculativeStats() const {
+    std::lock_guard<std::mutex> lock(spec_mutex_);
+
+    if (!speculative_decoder_) {
+        return "Speculative decoding not enabled";
+    }
+
+    return speculative_decoder_->getStatsString();
+}
+
+std::string ModelManager::checkSpeculativeCompatibility() const {
+    std::lock_guard<std::mutex> lock(spec_mutex_);
+
+    if (!speculative_decoder_) {
+        return "Speculative decoder not initialized";
+    }
+
+    if (!model_) {
+        return "Verifier model not loaded";
+    }
+
+    auto result = speculative_decoder_->checkCompatibility(model_);
+    return result.getSummary();
+}
+
+// ============================================================
+// 推测式解码推理路径
+// ============================================================
+
+std::string ModelManager::raw_infer_speculative(
+    const std::string& prompt,
+    int maxTokens,
+    float temperature,
+    int prefix_kv_len
+) const {
+    std::cerr << "[spec] Starting speculative decoding...\n";
+
+    if (!ctx_) return "[no_ctx]";
+
+    // ======== 阶段1: Tokenize prompt ========
+    if (prefix_kv_len == 0) {
+        llama_kv_cache_clear(ctx_);
+    }
+
+    const llama_vocab* vocab = llama_model_get_vocab(model_);
+
+    std::vector<llama_token> tokBuf(prompt.size() * 4);
+    int nTok = llama_tokenize(
+        vocab, prompt.c_str(), (int)prompt.size(),
+        tokBuf.data(), (int)tokBuf.size(),
+        true, false
+    );
+
+    if (nTok < 1) { return "[tok_fail]"; }
+    tokBuf.resize(nTok);
+
+    // 转换为std::vector<int>
+    std::vector<int> prompt_tokens(tokBuf.begin(), tokBuf.end());
+
+    std::cerr << "[spec] Prompt tokenized: " << nTok << " tokens\n";
+
+    // ======== 阶段2: 处理prompt (跳过缓存的部分) ========
+    int start_idx = (prefix_kv_len > 0 && prefix_kv_len < nTok) ? prefix_kv_len : 0;
+    int tokens_to_process = nTok - start_idx;
+
+    if (tokens_to_process > 0) {
+        std::cerr << "[spec] Processing prompt tokens [" << start_idx << ", " << nTok << ")\n";
+
+        llama_batch full = llama_batch_init(tokens_to_process, 0, 1);
+        for (int i = 0; i < tokens_to_process; ++i) {
+            int tok_idx = start_idx + i;
+            full.token[i]     = tokBuf[tok_idx];
+            full.pos[i]       = tok_idx;
+            full.seq_id[i][0] = 0;
+            full.n_seq_id[i]  = 1;
+            full.logits[i]    = (i == tokens_to_process - 1);
+        }
+        full.n_tokens = tokens_to_process;
+
+        if (llama_decode(ctx_, full) != 0) {
+            llama_batch_free(full);
+            return "[decode_prompt_fail]";
+        }
+        llama_batch_free(full);
+    }
+
+    // ======== 阶段3: 推测式解码生成 ========
+    const int eos = llama_vocab_eos(vocab);
+
+    std::vector<int> generated_tokens;
+    {
+        std::lock_guard<std::mutex> lock(spec_mutex_);
+        generated_tokens = speculative_decoder_->decode(
+            ctx_,
+            prompt_tokens,
+            maxTokens,
+            temperature,
+            eos
+        );
+    }
+
+    // ======== 阶段4: 将tokens转换为文本 ========
+    std::string output;
+    output.reserve(generated_tokens.size() * 4);
+
+    for (int token : generated_tokens) {
+        char piece[256] = {0};
+        llama_token_to_piece(vocab, token, piece, sizeof(piece), 0, false);
+
+        // 停止条件检查
+        if (piece[0] == '<') break;
+
+        output += piece;
+    }
+
+    std::cerr << "[spec] Generated " << generated_tokens.size() << " tokens, "
+              << output.size() << " bytes\n";
+
+    // 打印统计信息
+    {
+        std::lock_guard<std::mutex> lock(spec_mutex_);
+        std::cerr << speculative_decoder_->getStatsString();
+    }
+
+    return output;
 }

@@ -76,7 +76,7 @@ int main() {
     Database db("users.db");
 
     // 2. 加载量化模型（示例路径，可根据实际路径修改）
-   const std::string modelPath = "../../models/tinyllama-q4.gguf";
+   const std::string modelPath = "/Users/xiaohuo/Documents/Code/项目一代码/AI-infra/models/tinyllama-q4.gguf";
     if (!ModelManager::instance().loadModel(modelPath,
                                             /*n_ctx=*/2048,
                                             /*n_threads=*/4)) {
