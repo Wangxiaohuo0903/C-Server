@@ -1,0 +1,22 @@
+# LoRA蒸馏训练依赖
+
+# 核心库
+torch>=2.0.0
+transformers>=4.35.0
+peft>=0.7.0
+datasets>=2.14.0
+accelerate>=0.24.0
+
+# 量化支持
+bitsandbytes>=0.41.0
+
+# 日志和监控
+wandb>=0.16.0
+tensorboard>=2.15.0
+
+# 数据处理
+numpy>=1.24.0
+tqdm>=4.66.0
+
+# 可选: 更快的tokenizer
+tokenizers>=0.15.0

@@ -97,6 +97,58 @@ if (WITH_METAL AND APPLE)
 endif()
 
 # ───────────────────────────────────────────────────────────
-# 9. 安装目标（可选）
+# 9. 测试程序：推测式解码功能测试
+# ───────────────────────────────────────────────────────────
+# 收集测试程序需要的源文件（排除main.cpp）
+file(GLOB_RECURSE TEST_SRCS "${PROJECT_SOURCE_DIR}/src/*.cpp")
+list(FILTER TEST_SRCS EXCLUDE REGEX ".*main\\.cpp$")
+
+# 添加测试可执行文件
+add_executable(test_speculative
+    test_speculative.cpp
+    ${TEST_SRCS}
+)
+
+# 链接依赖库
+target_link_libraries(test_speculative
+    PRIVATE
+        llama
+        Threads::Threads
+        sqlite3
+)
+
+# K值优化测试
+add_executable(test_k_optimization
+    test_k_optimization.cpp
+    ${TEST_SRCS}
+)
+
+target_link_libraries(test_k_optimization
+    PRIVATE
+        llama
+        Threads::Threads
+        sqlite3
+)
+
+# Mac Metal 支持
+if (WITH_METAL AND APPLE)
+    if (METAL_FRAMEWORK AND FOUNDATION_FRAMEWORK)
+        target_link_libraries(test_speculative PRIVATE
+            ${METAL_FRAMEWORK}
+            ${FOUNDATION_FRAMEWORK}
+        )
+        target_link_libraries(test_k_optimization PRIVATE
+            ${METAL_FRAMEWORK}
+            ${FOUNDATION_FRAMEWORK}
+        )
+        if (METALKIT_FRAMEWORK)
+            target_link_libraries(test_speculative PRIVATE ${METALKIT_FRAMEWORK})
+            target_link_libraries(test_k_optimization PRIVATE ${METALKIT_FRAMEWORK})
+        endif()
+    endif()
+endif()
+
+# ───────────────────────────────────────────────────────────
+# 10. 安装目标（可选）
 # ───────────────────────────────────────────────────────────
 install(TARGETS ai_infra_server_mac DESTINATION bin)
