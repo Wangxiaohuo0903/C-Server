@@ -1,0 +1,111 @@
+# =============================================================================
+# AI-Chats-Linux Docker Compose 配置
+# 用于在 Windows 上通过 Docker 快速启动 AI 推理服务
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # AI 推理服务器
+  ai-server:
+    # 镜像构建配置
+    build:
+      context: ..  # 从项目根目录构建（需要访问 third_party）
+      dockerfile: AI-chats-linux/Dockerfile
+
+    # 容器名称
+    container_name: ai-chats-server
+
+    # 端口映射（主机:容器）
+    ports:
+      - "8081:8080"  # AI 推理 API (8081 on host, 8080 in container)
+
+    # 数据卷挂载
+    volumes:
+      # 模型文件（只读）- 请确保模型文件存在
+      - ../models:/app/models:ro
+      # 用户数据库（持久化）
+      - ai-chats-data:/data
+      # 日志目录（可选）
+      - ./logs:/app/logs
+
+    # 环境变量
+    environment:
+      - TZ=Asia/Shanghai
+      # 模型路径配置（可根据实际模型文件修改）
+      - MODEL_PATH=/app/models/tinyllama-q4.gguf
+      # 推理参数
+      - INFER_THREADS=4
+      - INFER_CTX_SIZE=2048
+
+    # 资源限制（根据你的 Windows 机器配置调整）
+    deploy:
+      resources:
+        limits:
+          cpus: '4'      # 限制使用 4 个 CPU 核心
+          memory: 8G     # 限制内存使用 8GB
+        reservations:
+          cpus: '2'      # 预留 2 个 CPU 核心
+          memory: 4G     # 预留 4GB 内存
+
+    # 重启策略
+    restart: unless-stopped
+
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s  # 给模型加载留足时间
+
+    # 网络配置
+    networks:
+      - ai-network
+
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# 网络配置
+networks:
+  ai-network:
+    driver: bridge
+
+# 数据卷配置
+volumes:
+  # 用户数据持久化存储
+  ai-chats-data:
+    driver: local
+
+# =============================================================================
+# 使用方法:
+#
+# 1. 启动服务（首次会自动构建镜像）:
+#    docker-compose up -d
+#
+# 2. 查看日志:
+#    docker-compose logs -f ai-server
+#
+# 3. 停止服务:
+#    docker-compose down
+#
+# 4. 重新构建镜像:
+#    docker-compose build --no-cache
+#
+# 5. 进入容器:
+#    docker-compose exec ai-server /bin/bash
+#
+# 6. 查看服务状态:
+#    docker-compose ps
+#
+# 7. 测试 API:
+#    curl http://localhost:8080/
+#    curl -X POST http://localhost:8080/infer \
+#      -H "Content-Type: application/json" \
+#      -d '{"prompt":"Hello, what is AI?","chat_id":"test"}'
+#
+# =============================================================================

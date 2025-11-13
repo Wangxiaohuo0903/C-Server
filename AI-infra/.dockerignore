@@ -1,0 +1,113 @@
+# =============================================================================
+# Docker 构建忽略文件
+# 减少构建上下文大小，加速镜像构建
+# =============================================================================
+
+# Git 相关
+.git
+.gitignore
+.gitattributes
+.github
+
+# IDE 和编辑器
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 构建输出（会在容器内重新编译）
+AI-chats-linux/build/
+AI-chats-mac/build/
+build/
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+
+# 模型文件（太大，通过 volume 挂载）
+models/*.gguf
+models/*.bin
+*.gguf
+*.bin
+
+# 数据库文件（会在容器内创建）
+*.db
+*.db-shm
+*.db-wal
+
+# Python 相关
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
+dist/
+*.egg
+.pytest_cache/
+venv/
+env/
+
+# Node.js 相关
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 日志文件
+logs/
+*.log
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+
+# 文档（减小镜像体积）
+*.md
+!README.md
+docs/
+research/
+benchmark/results/
+
+# 测试文件
+test/
+tests/
+*.test
+*.spec
+
+# CI/CD 配置
+.travis.yml
+.gitlab-ci.yml
+Jenkinsfile
+
+# Docker 相关（避免递归）
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Mac 特定文件
+AI-chats-mac/
+
+# 备份文件
+*.bak
+*.backup
+*.old
+
+# 压缩文件
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+
+# 编译器缓存
+.cache/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+
+# 用户上传文件
+uploads/

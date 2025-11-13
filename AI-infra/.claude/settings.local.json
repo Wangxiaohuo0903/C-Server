@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /s C:Users实习生DocumentsCodeserverC-ServerAI-infraAI-chats-linux 2)",
+      "Bash(nul)",
+      "Bash(if not exist models mkdir models)",
+      "Bash(curl:*)",
+      "Bash(docker-compose build:*)",
+      "Bash(tee:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker inspect:*)",
+      "Bash(powershell:*)",
+      "Bash(python test_api.py:*)",
+      "Bash(dir /s /b third_partyllama.cppllama.h 2)",
+      "Bash(set HTTP_PROXY=)",
+      "Bash(set:*)",
+      "Bash(docker cp:*)",
+      "Bash(python test_cache_eviction.py:*)",
+      "Bash(for i in {1..35})",
+      "Bash(do echo \"=== Request $i/35 - Round 1 ===\")",
+      "Bash(done)",
+      "Bash(do echo \"=== Request $i/35 - Round 2 (trigger cache save) ===\")",
+      "Bash(docker-compose logs:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
