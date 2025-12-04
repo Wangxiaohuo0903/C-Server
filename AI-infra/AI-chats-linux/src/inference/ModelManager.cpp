@@ -1,4 +1,5 @@
 #include "ModelManager.h"
+#include "SpeculativeDecoder.h"
 #include "llama.h"
 #include <iostream>
 #include <cstring>

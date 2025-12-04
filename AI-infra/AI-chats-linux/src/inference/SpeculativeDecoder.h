@@ -6,6 +6,13 @@
 #include <memory>
 #include <mutex>
 #include <chrono>
+#include <deque>
+#include <numeric>
+
+// Forward declarations
+class TaskClassifier;
+class ConfidenceGuidedStrategy;
+class ConfidenceAnalyzer;
 
 /**
  * @brief 推测式解码器（Speculative Decoding）
@@ -32,7 +39,7 @@ public:
         // Draft 生成参数
         int n_draft = 16;           // 每次生成的 draft tokens 数量（推荐 8-32）
         int n_draft_min = 5;        // 最小 draft 数量（低于此值跳过 draft）
-        float p_min = 0.9f;         // Draft 置信度阈值（低于此值停止 draft）
+        float p_min = 0.3f;         // Draft 置信度阈值（低于此值停止 draft）
 
         // Draft 模型参数
         int n_ctx_draft = 2048;     // Draft 模型上下文长度
@@ -47,6 +54,32 @@ public:
         // 性能优化
         bool enable_kv_reuse = true; // 是否复用 KV cache
         bool verbose = false;        // 是否打印详细日志
+
+        // ============ 自适应推测配置 ============
+        bool enable_adaptive = true;        // 是否启用自适应 draft 数量
+        int n_draft_max = 32;              // 最大 draft 数量
+        int n_draft_min_adaptive = 8;      // 最小 draft 数量（自适应模式）
+        float accept_rate_target = 0.55f;  // 目标接受率
+        float accept_rate_high = 0.65f;    // 高接受率阈值（超过则增加 draft）
+        float accept_rate_low = 0.45f;     // 低接受率阈值（低于则减少 draft）
+        int adjust_step = 2;               // 每次调整的步长
+        int window_size = 10;              // 滑动窗口大小（用于平滑接受率）
+
+        // 温度感知优化
+        bool enable_temperature_aware = true;  // 是否启用温度感知模式切换
+        float temperature_threshold = 0.9f;    // 温度阈值（超过则禁用推测式解码）
+
+        // ============ 任务感知优化 ============
+        bool enable_task_aware = true;         // 是否启用任务感知优化
+        bool task_aware_verbose = false;       // 是否打印任务分类详情
+
+        // ============ 置信度引导优化 ============
+        bool enable_confidence_guide = true;        // 是否启用置信度引导
+        float confidence_high_threshold = 0.85f;    // 高置信度阈值
+        float confidence_low_threshold = 0.65f;     // 低置信度阈值
+        int confidence_min_n_draft = 4;             // 置信度引导最小draft
+        int confidence_max_n_draft = 32;            // 置信度引导最大draft
+        bool confidence_verbose = false;            // 置信度详细日志
     };
 
     // ============ 性能统计 ============
@@ -64,6 +97,25 @@ public:
         double time_draft_ms = 0.0;   // Draft 阶段总耗时（毫秒）
         double time_verify_ms = 0.0;  // Verify 阶段总耗时（毫秒）
         double time_total_ms = 0.0;   // 总耗时（毫秒）
+
+        // ============ 自适应统计 ============
+        int n_draft_current = 16;          // 当前 draft 数量
+        double recent_accept_rate = 0.0;   // 最近窗口内的平均接受率
+        uint64_t n_adjustments = 0;        // 调整次数
+        uint64_t n_increased = 0;          // 增加 draft 次数
+        uint64_t n_decreased = 0;          // 减少 draft 次数
+        uint64_t n_temperature_fallback = 0;  // 温度过高回退到normal次数
+
+        // ============ 任务感知统计 ============
+        std::string detected_task_type = "UNKNOWN";  // 检测到的任务类型
+        float task_classification_confidence = 0.0f; // 任务分类置信度
+
+        // ============ 置信度引导统计 ============
+        float average_confidence = 0.0f;             // 平均置信度
+        float min_confidence = 1.0f;                 // 最小置信度
+        float max_confidence = 0.0f;                 // 最大置信度
+        uint64_t n_confidence_adjustments = 0;       // 置信度调整次数
+        uint64_t n_confidence_samples = 0;           // 置信度样本数
 
         // 每 token 平均时间
         double ms_per_token() const {
@@ -90,7 +142,16 @@ public:
         llama_model* model_target,
         llama_context* ctx_target,
         const std::string& draft_model_path,
-        const Config& config = Config()
+        const Config& config
+    );
+
+    /**
+     * @brief 构造推测式解码器（使用默认配置）
+     */
+    SpeculativeDecoder(
+        llama_model* model_target,
+        llama_context* ctx_target,
+        const std::string& draft_model_path
     );
 
     ~SpeculativeDecoder();
@@ -179,6 +240,24 @@ private:
     mutable Stats stats_;
     mutable std::mutex stats_mutex_;
 
+    // ============ 自适应推测相关 ============
+
+    // 滑动窗口：存储最近N次的接受率
+    mutable std::deque<double> accept_rate_window_;
+    mutable std::mutex adaptive_mutex_;
+
+    // ============ 任务感知相关 ============
+
+    // 任务分类器
+    std::unique_ptr<TaskClassifier> task_classifier_;
+
+    // ============ 置信度引导相关 ============
+
+    // 置信度引导策略
+    std::unique_ptr<ConfidenceGuidedStrategy> confidence_strategy_;
+    // 置信度分析器（用于实验数据收集）
+    std::unique_ptr<ConfidenceAnalyzer> confidence_analyzer_;
+
     // ============ 核心算法 ============
 
     /**
@@ -201,12 +280,14 @@ private:
      * @param draft Draft tokens 序列
      * @param last_token 上一个生成的 token
      * @param n_past 已处理的 token 数量
+     * @param temperature 采样温度 (与draft保持一致)
      * @return 被接受的 tokens
      */
     std::vector<llama_token> verifyAndAccept(
         const std::vector<llama_token>& draft,
         llama_token last_token,
-        int n_past
+        int n_past,
+        float temperature
     );
 
     // ============ 采样辅助函数 ============
@@ -231,6 +312,16 @@ private:
      */
     float getTokenProb(llama_context* ctx, llama_token token);
 
+    /**
+     * @brief 从指定logits数组计算token概率 (修复版本)
+     */
+    float getTokenProbFromLogits(const float* logits, int n_vocab, llama_token token);
+
+    /**
+     * @brief 从指定logits数组采样token
+     */
+    llama_token sampleTokenFromLogits(const float* logits, int n_vocab, float temperature);
+
     // ============ Tokenization ============
 
     /**
@@ -247,6 +338,37 @@ private:
      * @brief 将 tokens 序列转换为文本
      */
     std::string detokenize(const std::vector<llama_token>& tokens) const;
+
+    // ============ 自适应推测方法 ============
+
+    /**
+     * @brief 更新滑动窗口中的接受率
+     * @param current_accept_rate 当前轮次的接受率
+     */
+    void updateAcceptRateWindow(double current_accept_rate) const;
+
+    /**
+     * @brief 计算滑动窗口内的平均接受率
+     * @return 平均接受率
+     */
+    double calculateRecentAcceptRate() const;
+
+    /**
+     * @brief 根据接受率自适应调整 draft 数量
+     */
+    void adjustDraftCount();
+
+    /**
+     * @brief 检查温度是否过高，决定是否禁用推测式解码
+     * @param temperature 当前温度
+     * @return true 表示应该禁用推测式解码
+     */
+    bool shouldFallbackDueToTemperature(float temperature) const;
+
+    /**
+     * @brief 记录一次温度过高导致的fallback
+     */
+    void recordTemperatureFallback() const;
 
     // ============ 时间测量 ============
 
@@ -270,9 +392,22 @@ inline std::unique_ptr<SpeculativeDecoder> createSpeculativeDecoder(
     llama_model* model_target,
     llama_context* ctx_target,
     const std::string& draft_model_path,
-    const SpeculativeDecoder::Config& config = SpeculativeDecoder::Config()
+    const SpeculativeDecoder::Config& config
 ) {
     return std::make_unique<SpeculativeDecoder>(
         model_target, ctx_target, draft_model_path, config
+    );
+}
+
+/**
+ * @brief 推测式解码工厂函数（使用默认配置）
+ */
+inline std::unique_ptr<SpeculativeDecoder> createSpeculativeDecoder(
+    llama_model* model_target,
+    llama_context* ctx_target,
+    const std::string& draft_model_path
+) {
+    return std::make_unique<SpeculativeDecoder>(
+        model_target, ctx_target, draft_model_path
     );
 }

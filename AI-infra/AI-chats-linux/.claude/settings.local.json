@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(timeout 300 tail:*)",
+      "Bash(timeout 10 tail:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(docker run:*)",
+      "Bash(if [ -f \"C:\\Users\\实习生\\Documents\\Code\\server\\C-Server\\AI-infra\\ARROW_NOTATION_RESULTS.log\" ])",
+      "Bash(then tail -100 \"C:\\Users\\实习生\\Documents\\Code\\server\\C-Server\\AI-infra\\ARROW_NOTATION_RESULTS.log\")",
+      "Bash(else echo \"Log file not yet created\")",
+      "Bash(fi)",
+      "Bash(cmake:*)",
+      "Bash(make test_task_aware:*)",
+      "Bash(if [ -f \"C:\\Users\\实习生\\Documents\\Code\\server\\C-Server\\AI-infra\\FINAL_BATCH_FIX_RESULTS.log\" ])",
+      "Bash(then tail -100 \"C:\\Users\\实习生\\Documents\\Code\\server\\C-Server\\AI-infra\\FINAL_BATCH_FIX_RESULTS.log\")",
+      "Bash(python3:*)",
+      "Bash(python scripts/extract_all_data.py:*)",
+      "Bash(if [ -f \"build/test_task_aware.exe\" ])",
+      "Bash(then echo \"✓ test_task_aware.exe exists\")",
+      "Bash(else echo \"✗ test_task_aware.exe not found\")",
+      "Bash(./build/test_task_aware:*)",
+      "Bash(tee:*)",
+      "Bash(grep:*)",
+      "Bash(python scripts/calculate_pearson.py:*)",
+      "Bash(python:*)",
+      "Bash(pip install:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

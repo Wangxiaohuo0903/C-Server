@@ -1,0 +1,18 @@
+================================================================================
+  Phase 2 Token Confidence Guidance - Pearson Correlation Analysis
+================================================================================
+
+Core Results:
+  Pearson r = 0.8826
+  R-squared = 0.7791
+  t(4) = 3.7557
+  p-value: 0.01 < p < 0.02 (显著 **)
+  Correlation strength: 非常强的正相关
+
+Raw Data:
+  CODE_GENERATION: conf=0.974, accept=100.0%
+  JSON_GENERATION: conf=0.869, accept=81.0%
+  TRANSLATION: conf=0.841, accept=69.4%
+  QA_CONVERSATION: conf=0.811, accept=37.3%
+  CREATIVE_WRITING: conf=0.800, accept=25.0%
+  MATH_REASONING: conf=0.789, accept=50.0%

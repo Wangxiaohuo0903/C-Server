@@ -8,7 +8,11 @@
 #include <sstream>
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include "PrefixTree.h"  // Prefix Tree for improved cache matching
+
+// 前向声明
+class SpeculativeDecoder;
 
 // ------------------ 对话消息结构 ------------------
 // 每条消息包含角色（user/assistant/system）和内容
@@ -148,6 +152,40 @@ public:
     // prompts: 常用的system prompt列表
     void warmupCache(const std::vector<std::string>& prompts);
 
+    // ============ 推测式解码接口 ============
+
+    // 加载 draft 模型（用于推测式解码）
+    // draft_model_path: draft 模型路径
+    // 返回: 是否加载成功
+    bool loadDraftModel(const std::string& draft_model_path);
+
+    // 启用/禁用推测式解码
+    void setSpeculativeMode(bool enable);
+
+    // 检查推测式解码是否可用
+    bool isSpeculativeEnabled() const;
+
+    // 推测式解码推理接口
+    // chat_id: 会话标识
+    // user_msg: 用户输入
+    // maxTokens, temperature: 解码参数
+    // 返回: 生成的文本
+    std::string inferSpeculative(const std::string& chat_id,
+                                  const std::string& user_msg,
+                                  int maxTokens,
+                                  float temperature);
+
+    // 获取推测式解码统计信息
+    struct SpeculativeStats {
+        uint64_t n_predict = 0;      // 总生成 tokens
+        uint64_t n_drafted = 0;      // 总 draft tokens
+        uint64_t n_accepted = 0;     // 被接受的 tokens
+        double accept_rate = 0.0;    // 接受率
+        double speedup = 0.0;        // 加速比
+        double time_total_ms = 0.0;  // 总耗时
+    };
+    SpeculativeStats getSpeculativeStats() const;
+
 private:
     ModelManager();
     ~ModelManager();
@@ -182,6 +220,11 @@ private:
     // 统计信息
     mutable uint64_t total_cache_hits_ = 0;
     mutable uint64_t total_cache_requests_ = 0;
+
+    // ============ 推测式解码相关 ============
+    std::unique_ptr<SpeculativeDecoder> spec_decoder_;  // 推测式解码器
+    bool enable_speculative_ = false;                   // 是否启用推测式解码
+    mutable std::mutex spec_mutex_;                     // 保护推测式解码器的互斥锁
 
     // Tokenize: 将文本转换为token序列
     std::vector<int> tokenize(const std::string& text) const;

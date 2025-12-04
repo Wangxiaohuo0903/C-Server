@@ -97,6 +97,50 @@ if (WITH_METAL AND APPLE)
 endif()
 
 # ───────────────────────────────────────────────────────────
-# 9. 安装目标（可选）
+# 9. 测试程序
+# ───────────────────────────────────────────────────────────
+
+# 任务感知测试程序
+add_executable(test_task_aware
+    test_task_aware.cpp
+    src/inference/SpeculativeDecoder.cpp
+    src/inference/TaskClassifier.cpp
+    src/inference/ConfidenceGuide.cpp
+)
+target_link_libraries(test_task_aware
+    PRIVATE
+        llama
+        Threads::Threads
+)
+
+# 自适应推测式解码测试程序（如果存在）
+if(EXISTS "${PROJECT_SOURCE_DIR}/test_adaptive_speculative.cpp")
+    add_executable(test_adaptive_speculative
+        test_adaptive_speculative.cpp
+        src/inference/SpeculativeDecoder.cpp
+        src/inference/TaskClassifier.cpp
+    )
+    target_link_libraries(test_adaptive_speculative
+        PRIVATE
+            llama
+            Threads::Threads
+    )
+endif()
+
+# 置信度引导测试程序
+if(EXISTS "${PROJECT_SOURCE_DIR}/test_confidence_guide.cpp")
+    add_executable(test_confidence_guide
+        test_confidence_guide.cpp
+        src/inference/ConfidenceGuide.cpp
+    )
+    target_link_libraries(test_confidence_guide
+        PRIVATE
+            llama
+            Threads::Threads
+    )
+endif()
+
+# ───────────────────────────────────────────────────────────
+# 10. 安装目标（可选）
 # ───────────────────────────────────────────────────────────
 install(TARGETS ai_infra_server_mac DESTINATION bin)

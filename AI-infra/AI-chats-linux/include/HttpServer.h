@@ -52,7 +52,7 @@ public:
 
     /** 注册推理相关路由：/infer, /reset */
     void setupInferRoute() {
-        // POST /infer 接收 JSON {"user_message": "...", "chat_id":"...", "max_tokens":..., "temperature":...}
+        // POST /infer 接收 JSON {"user_message": "...", "chat_id":"...", "max_tokens":..., "temperature":..., "use_speculative":...}
         // 也兼容旧格式 {"prompt": "..."}
         router.addRoute("POST", "/infer", [](const HttpRequest& req) {
             try {
@@ -82,6 +82,7 @@ public:
                 // 解析可选参数（如果不存在则使用默认值）
                 int maxTokens = 64;
                 float temperature = 0.7f;
+                bool useSpeculative = false;
 
                 if (json.count("max_tokens") && !json["max_tokens"].empty()) {
                     std::string maxTokStr = json["max_tokens"];
@@ -107,23 +108,68 @@ public:
                     }
                 }
 
+                if (json.count("use_speculative") && !json["use_speculative"].empty()) {
+                    std::string specStr = json["use_speculative"];
+                    std::cerr << "[/infer] use_speculative raw value: [" << specStr << "]" << std::endl;
+                    useSpeculative = (specStr == "true" || specStr == "1" || specStr == "True");
+                    std::cerr << "[/infer] use_speculative parsed: " << useSpeculative << std::endl;
+                }
+
                 // 输出调试信息
                 std::cerr << "[/infer] Final parameters:" << std::endl;
                 std::cerr << "  chat_id: " << chatId << std::endl;
                 std::cerr << "  user_message: " << userMsg.substr(0, std::min(size_t(50), userMsg.size())) << "..." << std::endl;
                 std::cerr << "  max_tokens: " << maxTokens << std::endl;
                 std::cerr << "  temperature: " << temperature << std::endl;
+                std::cerr << "  use_speculative: " << useSpeculative << std::endl;
 
                 // 单例模型管理器，用 chatId 区分会话
                 auto& mgr = ModelManager::instance();
-                std::cerr << "[/infer] Calling ModelManager::infer..." << std::endl;
-                std::string answer = mgr.infer(chatId, userMsg, maxTokens, temperature);
-                std::cerr << "[/infer] Inference completed, answer length: " << answer.size() << std::endl;
+                std::string answer;
 
-                HttpResponse r(200);
-                r.setHeader("Content-Type", "application/json");
-                r.setBody("{\"answer\":\"" + answer + "\"}");
-                return r;
+                // 根据 use_speculative 选择推理方式
+                if (useSpeculative && mgr.isSpeculativeEnabled()) {
+                    std::cerr << "[/infer] Using speculative decoding..." << std::endl;
+                    answer = mgr.inferSpeculative(chatId, userMsg, maxTokens, temperature);
+
+                    // 获取推测式解码统计信息
+                    auto stats = mgr.getSpeculativeStats();
+                    std::cerr << "[/infer] Speculative stats: accept_rate=" << (stats.accept_rate * 100)
+                              << "%, speedup=" << stats.speedup << "x" << std::endl;
+
+                    // 返回带统计信息的响应
+                    HttpResponse r(200);
+                    r.setHeader("Content-Type", "application/json");
+
+                    // 构造 JSON 响应（包含统计信息）
+                    std::ostringstream jsonResp;
+                    jsonResp << "{\"answer\":\"" << answer << "\""
+                             << ",\"mode\":\"speculative\""
+                             << ",\"stats\":{"
+                             << "\"tokens\":" << stats.n_predict
+                             << ",\"drafted\":" << stats.n_drafted
+                             << ",\"accepted\":" << stats.n_accepted
+                             << ",\"accept_rate\":" << stats.accept_rate
+                             << ",\"speedup\":" << stats.speedup
+                             << ",\"time_ms\":" << stats.time_total_ms
+                             << "}}";
+                    r.setBody(jsonResp.str());
+                    return r;
+
+                } else {
+                    if (useSpeculative) {
+                        std::cerr << "[/infer] WARNING: Speculative decoding requested but not available, falling back to normal inference" << std::endl;
+                    } else {
+                        std::cerr << "[/infer] Using normal inference..." << std::endl;
+                    }
+                    answer = mgr.infer(chatId, userMsg, maxTokens, temperature);
+                    std::cerr << "[/infer] Inference completed, answer length: " << answer.size() << std::endl;
+
+                    HttpResponse r(200);
+                    r.setHeader("Content-Type", "application/json");
+                    r.setBody("{\"answer\":\"" + answer + "\",\"mode\":\"normal\"}");
+                    return r;
+                }
 
             } catch (const std::exception& e) {
                 std::cerr << "[/infer] EXCEPTION: " << e.what() << std::endl;
@@ -140,6 +186,103 @@ public:
             if (id.empty()) id = "default";
             ModelManager::instance().dropSession(id);
             return HttpResponse::makeOkResponse("reset ok");
+        });
+
+        // ============ 推测式解码管理路由 ============
+
+        // POST /load_draft_model 加载 draft 模型
+        // JSON: {"draft_model_path": "..."}
+        router.addRoute("POST", "/load_draft_model", [](const HttpRequest& req) {
+            try {
+                auto json = req.parseJson();
+                if (!json.count("draft_model_path") || json["draft_model_path"].empty()) {
+                    return HttpResponse::makeErrorResponse(400, "draft_model_path required");
+                }
+
+                std::string draftModelPath = json["draft_model_path"];
+                std::cerr << "[/load_draft_model] Loading draft model: " << draftModelPath << std::endl;
+
+                auto& mgr = ModelManager::instance();
+                bool success = mgr.loadDraftModel(draftModelPath);
+
+                if (success) {
+                    std::cerr << "[/load_draft_model] Draft model loaded successfully" << std::endl;
+                    HttpResponse r(200);
+                    r.setHeader("Content-Type", "application/json");
+                    r.setBody("{\"success\":true,\"message\":\"Draft model loaded successfully\"}");
+                    return r;
+                } else {
+                    std::cerr << "[/load_draft_model] Failed to load draft model" << std::endl;
+                    return HttpResponse::makeErrorResponse(500, "Failed to load draft model");
+                }
+
+            } catch (const std::exception& e) {
+                std::cerr << "[/load_draft_model] EXCEPTION: " << e.what() << std::endl;
+                return HttpResponse::makeErrorResponse(500, std::string("error: ") + e.what());
+            }
+        });
+
+        // POST /set_speculative_mode 启用/禁用推测式解码
+        // JSON: {"enable": true/false}
+        router.addRoute("POST", "/set_speculative_mode", [](const HttpRequest& req) {
+            try {
+                auto json = req.parseJson();
+                if (!json.count("enable") || json["enable"].empty()) {
+                    return HttpResponse::makeErrorResponse(400, "enable field required (true/false)");
+                }
+
+                std::string enableStr = json["enable"];
+                bool enable = (enableStr == "true" || enableStr == "1" || enableStr == "True");
+
+                std::cerr << "[/set_speculative_mode] Setting speculative mode to: " << enable << std::endl;
+
+                auto& mgr = ModelManager::instance();
+                mgr.setSpeculativeMode(enable);
+
+                HttpResponse r(200);
+                r.setHeader("Content-Type", "application/json");
+                std::string msg = enable ? "Speculative decoding enabled" : "Speculative decoding disabled";
+                r.setBody("{\"success\":true,\"message\":\"" + msg + "\"}");
+                return r;
+
+            } catch (const std::exception& e) {
+                std::cerr << "[/set_speculative_mode] EXCEPTION: " << e.what() << std::endl;
+                return HttpResponse::makeErrorResponse(500, std::string("error: ") + e.what());
+            }
+        });
+
+        // GET /speculative_status 获取推测式解码状态
+        router.addRoute("GET", "/speculative_status", [](const HttpRequest& req) {
+            try {
+                auto& mgr = ModelManager::instance();
+                bool enabled = mgr.isSpeculativeEnabled();
+
+                HttpResponse r(200);
+                r.setHeader("Content-Type", "application/json");
+
+                std::ostringstream jsonResp;
+                jsonResp << "{\"enabled\":" << (enabled ? "true" : "false");
+
+                if (enabled) {
+                    auto stats = mgr.getSpeculativeStats();
+                    jsonResp << ",\"stats\":{"
+                             << "\"total_tokens\":" << stats.n_predict
+                             << ",\"total_drafted\":" << stats.n_drafted
+                             << ",\"total_accepted\":" << stats.n_accepted
+                             << ",\"accept_rate\":" << stats.accept_rate
+                             << ",\"speedup\":" << stats.speedup
+                             << "}}";
+                } else {
+                    jsonResp << "}";
+                }
+
+                r.setBody(jsonResp.str());
+                return r;
+
+            } catch (const std::exception& e) {
+                std::cerr << "[/speculative_status] EXCEPTION: " << e.what() << std::endl;
+                return HttpResponse::makeErrorResponse(500, std::string("error: ") + e.what());
+            }
         });
     }
 
