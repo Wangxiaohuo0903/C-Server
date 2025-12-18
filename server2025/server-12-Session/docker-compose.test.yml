@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  server12-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: server12-test
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - MODEL_PATH=/app/models/mock.gguf
+    restart: unless-stopped

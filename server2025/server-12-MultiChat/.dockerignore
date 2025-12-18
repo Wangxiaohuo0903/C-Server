@@ -1,0 +1,42 @@
+# Docker构建忽略文件
+# 加速构建，减小上下文大小
+
+# 构建输出
+build/
+*.o
+*.a
+server12
+
+# 测试文件
+test_*.py
+test_*.sh
+*.log
+
+# 文档
+README.md
+QUICK_START.md
+*.md
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 临时文件
+*.tmp
+*.bak
+*~
+
+# 模型文件（通过volume挂载）
+models/
+*.gguf
+
+# Docker文件本身
+Dockerfile*
+docker-compose*.yml
+.dockerignore

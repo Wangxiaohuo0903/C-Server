@@ -1,0 +1,31 @@
+# Docker ignore文件
+# 排除不需要复制到容器的文件
+
+# Git相关
+.git
+.gitignore
+
+# 编译输出
+*.o
+*.a
+*.so
+server11
+a.out
+
+# 模型文件（太大，建议后续挂载）
+models/*.gguf
+
+# 临时文件
+*.tmp
+*.log
+
+# 测试脚本输出
+test_output/
+
+# IDE配置
+.vscode/
+.idea/
+
+# 数据库文件
+*.db
+*.db-journal
