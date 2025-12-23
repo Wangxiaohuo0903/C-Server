@@ -1,0 +1,41 @@
+# 模型文件 (通常几百MB到几GB，不应提交到Git)
+*.gguf
+*.bin
+*.safetensors
+*.pth
+*.pt
+
+# 编译产物
+*.o
+*.so
+*.dll
+*.exe
+*.a
+*.dylib
+build/
+cmake-build-*/
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 日志文件
+*.log
+logs/
+
+# Docker相关
+.dockerignore
+
+# IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 临时文件
+*.tmp
+*.bak
+*.backup
+nul

@@ -1,662 +1,275 @@
 #include "SpeculativeDecoder.h"
+#include "TaskClassifier.h"
+#include "ConfidenceGuide.h"
 #include "llama.h"
-#include <sstream>
-#include <algorithm>
-#include <cmath>
 #include <iostream>
+#include <iomanip>   // for std::setprecision
+#include <algorithm>
 #include <cstring>
-
-// 简化的日志宏 (不依赖Logger.h)
-#define LOG_INFO(msg) std::cerr << "[INFO] " << msg << std::endl
-#define LOG_WARN(msg) std::cerr << "[WARN] " << msg << std::endl
-#define LOG_ERROR(msg) std::cerr << "[ERROR] " << msg << std::endl
-#define LOG_DEBUG(msg) std::cerr << "[DEBUG] " << msg << std::endl
-
-// ============================================================
-// llama_batch辅助函数 (兼容新版llama.cpp API)
-// ============================================================
-
-static void batch_add(llama_batch& batch, llama_token token, llama_pos pos,
-                      const std::vector<llama_seq_id>& seq_ids, bool logits) {
-    batch.token[batch.n_tokens] = token;
-    batch.pos[batch.n_tokens] = pos;
-    batch.n_seq_id[batch.n_tokens] = seq_ids.size();
-    for (size_t i = 0; i < seq_ids.size(); ++i) {
-        batch.seq_id[batch.n_tokens][i] = seq_ids[i];
-    }
-    batch.logits[batch.n_tokens] = logits ? 1 : 0;
-    batch.n_tokens++;
-}
-
-static void batch_clear(llama_batch& batch) {
-    batch.n_tokens = 0;
-}
+#include <cmath>
+#include <cstdlib>  // for rand(), srand()
+#include <ctime>    // for time()
+#include <vector>   // for std::vector
+#include <numeric>  // for std::accumulate
 
 // ============================================================
-// 构造函数与析构函数
+// 构造与析构
 // ============================================================
 
-SpeculativeDecoder::SpeculativeDecoder(const SpeculativeConfig& config)
-    : config_(config)
+SpeculativeDecoder::SpeculativeDecoder(
+    llama_model* model_target,
+    llama_context* ctx_target,
+    const std::string& draft_model_path
+) : SpeculativeDecoder(model_target, ctx_target, draft_model_path, Config())
 {
-    stats_.current_K.store(config_.draft_tokens_K, std::memory_order_relaxed);
-    LOG_INFO("SpeculativeDecoder initialized with K=" + std::to_string(config_.draft_tokens_K));
+}
+
+SpeculativeDecoder::SpeculativeDecoder(
+    llama_model* model_target,
+    llama_context* ctx_target,
+    const std::string& draft_model_path,
+    const Config& config
+) : model_tgt_(model_target),
+    ctx_tgt_(ctx_target),
+    config_(config),
+    model_dft_(nullptr),
+    ctx_dft_(nullptr)
+{
+    if (!model_tgt_ || !ctx_tgt_) {
+        std::cerr << "[SpecDecoder] ERROR: Invalid target model/context\n";
+        return;
+    }
+
+    std::cout << "[SpecDecoder] Initializing Speculative Decoder...\n";
+    std::cout << "[SpecDecoder] Draft model path: " << draft_model_path << "\n";
+
+    // 1. 加载 draft 模型
+    llama_model_params model_params = llama_model_default_params();
+    model_dft_ = llama_model_load_from_file(draft_model_path.c_str(), model_params);
+
+    if (!model_dft_) {
+        std::cerr << "[SpecDecoder] ERROR: Failed to load draft model: " << draft_model_path << "\n";
+        return;
+    }
+
+    std::cout << "[SpecDecoder] Draft model loaded successfully\n";
+
+    // 2. 创建 draft 上下文
+    llama_context_params ctx_params = llama_context_default_params();
+    ctx_params.n_ctx = config_.n_ctx_draft;
+    ctx_params.n_threads = config_.n_threads_draft;
+    ctx_params.n_batch = 512;  // 足够大以支持长prompt (最多512 tokens)
+
+    ctx_dft_ = llama_init_from_model(model_dft_, ctx_params);
+
+    if (!ctx_dft_) {
+        std::cerr << "[SpecDecoder] ERROR: Failed to create draft context\n";
+        llama_model_free(model_dft_);
+        model_dft_ = nullptr;
+        return;
+    }
+
+    std::cout << "[SpecDecoder] Draft context created (n_ctx=" << config_.n_ctx_draft
+              << ", n_threads=" << config_.n_threads_draft << ")\n";
+
+    // 3. 验证词汇表兼容性
+    const llama_vocab* vocab_tgt = llama_model_get_vocab(model_tgt_);
+    const llama_vocab* vocab_dft = llama_model_get_vocab(model_dft_);
+
+    const int vocab_type_tgt = llama_vocab_type(vocab_tgt);
+    const int vocab_type_dft = llama_vocab_type(vocab_dft);
+
+    if (vocab_type_tgt != vocab_type_dft) {
+        std::cerr << "[SpecDecoder] WARNING: Vocab types differ (target="
+                  << vocab_type_tgt << ", draft=" << vocab_type_dft << ")\n";
+    }
+
+    const int n_vocab_tgt = llama_vocab_n_tokens(vocab_tgt);
+    const int n_vocab_dft = llama_vocab_n_tokens(vocab_dft);
+    const int vocab_diff = std::abs(n_vocab_tgt - n_vocab_dft);
+
+    if (vocab_diff > 128) {  // 允许一定差异
+        std::cerr << "[SpecDecoder] WARNING: Large vocab size difference: " << vocab_diff << "\n";
+    }
+
+    std::cout << "[SpecDecoder] Vocab check: target=" << n_vocab_tgt
+              << " tokens, draft=" << n_vocab_dft << " tokens (diff=" << vocab_diff << ")\n";
+
+    // 4. 初始化统计
+    resetStats();
+
+    // 5. 初始化任务分类器（如果启用）
+    if (config_.enable_task_aware) {
+        task_classifier_ = std::make_unique<TaskClassifier>(config_.task_aware_verbose);
+        std::cout << "[SpecDecoder] Task-aware optimization enabled\n";
+    }
+
+    // 6. 初始化置信度引导（如果启用）
+    if (config_.enable_confidence_guide) {
+        ConfidenceGuidedStrategy::Config conf_config;
+        conf_config.high_threshold = config_.confidence_high_threshold;
+        conf_config.low_threshold = config_.confidence_low_threshold;
+        conf_config.min_n_draft = config_.confidence_min_n_draft;
+        conf_config.max_n_draft = config_.confidence_max_n_draft;
+        conf_config.enable_verbose = config_.confidence_verbose;
+
+        confidence_strategy_ = std::make_unique<ConfidenceGuidedStrategy>(conf_config);
+        confidence_analyzer_ = std::make_unique<ConfidenceAnalyzer>();
+        std::cout << "[SpecDecoder] Confidence-guided optimization enabled\n";
+    }
+
+    std::cout << "[SpecDecoder] ✅ Initialization complete!\n";
+    std::cout << "[SpecDecoder] Config: n_draft=" << config_.n_draft
+              << ", n_draft_min=" << config_.n_draft_min
+              << ", p_min=" << config_.p_min << "\n";
 }
 
 SpeculativeDecoder::~SpeculativeDecoder() {
-    unloadDraftModel();
-    LOG_INFO("SpeculativeDecoder destroyed");
+    if (ctx_dft_) {
+        llama_free(ctx_dft_);
+        ctx_dft_ = nullptr;
+    }
+    if (model_dft_) {
+        llama_model_free(model_dft_);
+        model_dft_ = nullptr;
+    }
+    std::cout << "[SpecDecoder] Cleanup complete\n";
 }
 
 // ============================================================
-// 模型加载/卸载
+// 辅助函数：Tokenization
 // ============================================================
 
-bool SpeculativeDecoder::loadDraftModel() {
-    std::lock_guard<std::mutex> lock(draft_mutex_);
+std::vector<llama_token> SpeculativeDecoder::tokenize(const std::string& text) const {
+    if (!model_tgt_) return {};
 
-    if (draft_model_ != nullptr) {
-        LOG_WARN("Draft model already loaded, skipping...");
-        return true;
-    }
+    const llama_vocab* vocab = llama_model_get_vocab(model_tgt_);
 
-    if (config_.draft_model_path.empty()) {
-        LOG_ERROR("Draft model path is empty");
-        return false;
-    }
+    // 预分配足够大的缓冲区
+    std::vector<llama_token> tokens(text.size() * 4);
 
-    LOG_INFO("Loading draft model from: " + config_.draft_model_path);
-
-    // 设置模型参数
-    llama_model_params model_params = llama_model_default_params();
-    model_params.n_gpu_layers = config_.draft_n_gpu_layers;
-
-    // 加载模型
-    draft_model_ = llama_load_model_from_file(
-        config_.draft_model_path.c_str(),
-        model_params
+    int n_tokens = llama_tokenize(
+        vocab,
+        text.c_str(),
+        text.size(),
+        tokens.data(),
+        tokens.size(),
+        true,   // add_special (add BOS)
+        false   // parse_special
     );
 
-    if (!draft_model_) {
-        LOG_ERROR("Failed to load draft model from: " + config_.draft_model_path);
-        return false;
-    }
-
-    // 创建context
-    llama_context_params ctx_params = llama_context_default_params();
-    ctx_params.n_ctx = config_.draft_n_ctx;
-    ctx_params.n_threads = config_.draft_n_threads;
-    ctx_params.n_threads_batch = config_.draft_n_threads;
-
-    draft_ctx_ = llama_new_context_with_model(draft_model_, ctx_params);
-
-    if (!draft_ctx_) {
-        LOG_ERROR("Failed to create draft context");
-        llama_free_model(draft_model_);
-        draft_model_ = nullptr;
-        return false;
-    }
-
-    LOG_INFO("Draft model loaded successfully");
-    LOG_INFO("  - Context size: " + std::to_string(config_.draft_n_ctx));
-    LOG_INFO("  - CPU threads: " + std::to_string(config_.draft_n_threads));
-    LOG_INFO("  - GPU layers: " + std::to_string(config_.draft_n_gpu_layers));
-
-    return true;
-}
-
-void SpeculativeDecoder::unloadDraftModel() {
-    std::lock_guard<std::mutex> lock(draft_mutex_);
-
-    if (draft_ctx_) {
-        llama_free(draft_ctx_);
-        draft_ctx_ = nullptr;
-    }
-
-    if (draft_model_) {
-        llama_free_model(draft_model_);
-        draft_model_ = nullptr;
-    }
-
-    LOG_INFO("Draft model unloaded");
-}
-
-// ============================================================
-// 配置验证 - 规避常见坑点
-// ============================================================
-
-SpeculativeDecoder::CompatibilityResult SpeculativeDecoder::checkCompatibility(
-    llama_model* verifier_model
-) const {
-    CompatibilityResult result;
-
-    if (!draft_model_ || !verifier_model) {
-        result.is_compatible = false;
-        result.error_message = "Draft or verifier model is null";
-        return result;
-    }
-
-    // ======== 坑点1: 词表大小必须一致 ========
-    const llama_vocab* vocab_draft = llama_model_get_vocab(draft_model_);
-    const llama_vocab* vocab_verifier = llama_model_get_vocab(verifier_model);
-
-    int vocab_size_draft = llama_vocab_n_tokens(vocab_draft);
-    int vocab_size_verifier = llama_vocab_n_tokens(vocab_verifier);
-
-    result.vocab_size_draft = vocab_size_draft;
-    result.vocab_size_verifier = vocab_size_verifier;
-
-    if (vocab_size_draft != vocab_size_verifier) {
-        result.is_compatible = false;
-        result.vocab_match = false;
-        result.error_message = "Vocabulary size mismatch: draft=" +
-                               std::to_string(vocab_size_draft) +
-                               " vs verifier=" + std::to_string(vocab_size_verifier) +
-                               " (CRITICAL: token alignment will be wrong!)";
-        LOG_ERROR(result.error_message);
-        return result;
-    }
-
-    result.vocab_match = true;
-
-    // ======== 坑点2: 分词器类型必须一致 ========
-    // 检查特殊token是否匹配 (BOS, EOS, etc.)
-    int bos_draft = llama_vocab_bos(vocab_draft);
-    int bos_verifier = llama_vocab_bos(vocab_verifier);
-    int eos_draft = llama_vocab_eos(vocab_draft);
-    int eos_verifier = llama_vocab_eos(vocab_verifier);
-
-    if (bos_draft != bos_verifier || eos_draft != eos_verifier) {
-        result.is_compatible = false;
-        result.tokenizer_match = false;
-        result.error_message = "Special tokens mismatch: " \
-                               "BOS(draft=" + std::to_string(bos_draft) +
-                               " vs verifier=" + std::to_string(bos_verifier) + "), " +
-                               "EOS(draft=" + std::to_string(eos_draft) +
-                               " vs verifier=" + std::to_string(eos_verifier) + ")";
-        LOG_ERROR(result.error_message);
-        return result;
-    }
-
-    result.tokenizer_match = true;
-
-    // ======== 坑点3: 验证几个常见token的编码一致性 ========
-    const char* test_tokens[] = {" hello", " world", "\n", "the"};
-    for (const char* text : test_tokens) {
-        std::vector<llama_token> draft_encoded(10);
-        std::vector<llama_token> verifier_encoded(10);
-
-        int n_draft = llama_tokenize(vocab_draft, text, strlen(text),
-                                      draft_encoded.data(), draft_encoded.size(),
-                                      false, false);
-        int n_verifier = llama_tokenize(vocab_verifier, text, strlen(text),
-                                        verifier_encoded.data(), verifier_encoded.size(),
-                                        false, false);
-
-        if (n_draft != n_verifier) {
-            result.is_compatible = false;
-            result.tokenizer_match = false;
-            result.error_message = "Tokenizer encoding mismatch for \"" +
-                                   std::string(text) + "\": draft produced " +
-                                   std::to_string(n_draft) + " tokens vs verifier " +
-                                   std::to_string(n_verifier) + " tokens";
-            LOG_ERROR(result.error_message);
-            return result;
-        }
-
-        // 检查token序列是否完全一致
-        for (int i = 0; i < n_draft; ++i) {
-            if (draft_encoded[i] != verifier_encoded[i]) {
-                result.is_compatible = false;
-                result.tokenizer_match = false;
-                result.error_message = "Token ID mismatch at position " +
-                                       std::to_string(i) + " for \"" + text + "\"";
-                LOG_ERROR(result.error_message);
-                return result;
-            }
-        }
-    }
-
-    result.tokenizer_match = true;
-    result.is_compatible = true;
-    result.error_message = "Models are compatible!";
-
-    LOG_INFO("✓ Compatibility check passed:");
-    LOG_INFO("  - Vocabulary size: " + std::to_string(vocab_size_draft));
-    LOG_INFO("  - Tokenizer: compatible");
-    LOG_INFO("  - Special tokens: BOS=" + std::to_string(bos_draft) +
-                 ", EOS=" + std::to_string(eos_draft));
-
-    return result;
-}
-
-std::string SpeculativeDecoder::CompatibilityResult::getSummary() const {
-    std::ostringstream oss;
-    oss << "\n=== Drafter/Verifier Compatibility ===\n";
-    oss << "Overall: " << (is_compatible ? "✓ COMPATIBLE" : "✗ INCOMPATIBLE") << "\n";
-    oss << "Vocab match: " << (vocab_match ? "✓" : "✗")
-        << " (draft=" << vocab_size_draft
-        << ", verifier=" << vocab_size_verifier << ")\n";
-    oss << "Tokenizer match: " << (tokenizer_match ? "✓" : "✗") << "\n";
-    if (!is_compatible) {
-        oss << "Error: " << error_message << "\n";
-    }
-    oss << "======================================\n";
-    return oss.str();
-}
-
-// ============================================================
-// 核心解码方法
-// ============================================================
-
-std::vector<int> SpeculativeDecoder::decode(
-    llama_context* verifier_ctx,
-    const std::vector<int>& prompt_tokens,
-    int max_tokens,
-    float temperature,
-    int stop_token
-) {
-    if (!isLoaded()) {
-        LOG_ERROR("Draft model not loaded, cannot perform speculative decoding");
-        return {};
-    }
-
-    if (!verifier_ctx) {
-        LOG_ERROR("Verifier context is null");
-        return {};
-    }
-
-    // ======== 坑点4: 极短回答不建议使用推测式解码 ========
-    if (max_tokens < 10) {
-        LOG_WARN("⚠ Very short generation (max_tokens=" + std::to_string(max_tokens) +
-                     "), speculative decoding may be slower than greedy. Consider disabling.");
-    }
-
-    // ======== 坑点5: 温度过高可能导致接受率过低 ========
-    if (temperature > 0.9f) {
-        LOG_WARN("⚠ High temperature (" + std::to_string(temperature) +
-                     ") may cause low acceptance rate (<30%). Consider lowering temperature.");
-    }
-
-    std::vector<int> generated_tokens;
-    std::vector<int> current_context = prompt_tokens;
-
-    LOG_DEBUG("Starting speculative decoding (max_tokens=" + std::to_string(max_tokens) + ")");
-
-    int step = 0;
-    int K = stats_.current_K.load(std::memory_order_relaxed);
-
-    while ((int)generated_tokens.size() < max_tokens) {
-        // ======== 第1阶段: 起草K个tokens ========
-        ScopedTimer draft_timer(stats_.total_draft_time_ns);
-        std::vector<int> draft_tokens = draftTokens(current_context, K, temperature);
-        draft_timer.~ScopedTimer();  // 手动结束计时
-
-        if (draft_tokens.empty()) {
-            LOG_WARN("Drafter returned no tokens, stopping");
-            break;
-        }
-
-        LOG_DEBUG("Step " + std::to_string(step) + ": drafted " +
-                     std::to_string(draft_tokens.size()) + " tokens");
-
-        // ======== 第2阶段: 批量校验tokens ========
-        ScopedTimer verify_timer(stats_.total_verify_time_ns);
-        VerifyResult verify_result = verifyTokensBatch(
-            verifier_ctx,
-            current_context,
-            draft_tokens,
-            temperature
+    if (n_tokens < 0) {
+        // 缓冲区太小，重新分配
+        tokens.resize(-n_tokens);
+        n_tokens = llama_tokenize(
+            vocab,
+            text.c_str(),
+            text.size(),
+            tokens.data(),
+            tokens.size(),
+            true,
+            false
         );
-        verify_timer.~ScopedTimer();
-
-        LOG_DEBUG("Step " + std::to_string(step) + ": accepted " +
-                     std::to_string(verify_result.accepted_count) + "/" +
-                     std::to_string(draft_tokens.size()) + " draft tokens");
-
-        // ======== 第3阶段: 更新统计 & 上下文 ========
-        stats_.total_drafted.fetch_add(draft_tokens.size(), std::memory_order_relaxed);
-        stats_.total_accepted.fetch_add(verify_result.accepted_tokens.size(), std::memory_order_relaxed);
-        stats_.total_steps.fetch_add(1, std::memory_order_relaxed);
-
-        // 🔥 新算法: 更新滑动窗口接受率 (每步都更新)
-        float step_acceptance_rate = static_cast<float>(verify_result.accepted_count) / draft_tokens.size();
-        stats_.updateRecentAcceptanceRate(step_acceptance_rate);
-
-        // 添加接受的tokens到结果
-        for (int token : verify_result.accepted_tokens) {
-            generated_tokens.push_back(token);
-            current_context.push_back(token);
-
-            // 检查是否遇到停止token
-            if (token == stop_token) {
-                LOG_DEBUG("Encountered stop token, ending generation");
-                goto finish;
-            }
-
-            // 检查是否达到最大长度
-            if ((int)generated_tokens.size() >= max_tokens) {
-                goto finish;
-            }
-        }
-
-        // 如果没有接受任何token,说明有问题,停止
-        if (verify_result.accepted_tokens.empty()) {
-            LOG_WARN("No tokens accepted, stopping generation");
-            break;
-        }
-
-        // 🔥 新算法: Early Stopping检查 (每5步检查一次)
-        if (step > 0 && step % 5 == 0) {
-            if (shouldFallbackToGreedy()) {
-                LOG_WARN("Early stopping triggered - switching to greedy decoding would be faster");
-                LOG_WARN("Recommendation: Disable speculative decoding for this task");
-                // 注意: 这里只是警告,不实际切换 (因为需要重新初始化context)
-                // 实际部署时可以在ModelManager层实现真正的切换
-            }
-        }
-
-        // 🔥 新算法: 智能K值调整 (使用温度自适应)
-        if (config_.enable_dynamic_K && step > 0) {
-            // 每3步调整一次 (比原来的5步更激进)
-            if (step % 3 == 0) {
-                smartAdjustK(temperature);
-                K = stats_.current_K.load(std::memory_order_relaxed);
-            }
-        }
-
-        // ======== 坑点6: 接受率过低预警 ========
-        if (step > 5 && step % 10 == 0) {
-            float current_rate = stats_.getAcceptanceRate();
-            if (current_rate < 0.30f) {
-                LOG_WARN("⚠ Low acceptance rate detected: " +
-                             std::to_string(current_rate * 100) + "% (< 30%)");
-                LOG_WARN("  Possible causes:");
-                LOG_WARN("  1. Draft model too weak for this task");
-                LOG_WARN("  2. Temperature too high");
-                LOG_WARN("  3. Different model architectures");
-                LOG_WARN("  → Speculative decoding may be SLOWER than greedy!");
-            }
-        }
-
-        step++;
     }
 
-finish:
-    float final_acceptance_rate = stats_.getAcceptanceRate();
-    float final_speedup = stats_.getSpeedup();
-
-    LOG_INFO("Speculative decoding finished: " + std::to_string(generated_tokens.size()) +
-                 " tokens in " + std::to_string(step) + " steps");
-    LOG_INFO("  Acceptance rate: " + std::to_string(final_acceptance_rate * 100) + "%");
-    LOG_INFO("  Speedup: " + std::to_string(final_speedup) + "x");
-
-    // ======== 最终性能评估 ========
-    if (final_speedup < 1.0f) {
-        LOG_WARN("⚠ Speculative decoding was SLOWER than greedy (" +
-                     std::to_string(final_speedup) + "x)!");
-        LOG_WARN("  Consider disabling for this use case.");
-    } else if (final_speedup > 2.0f) {
-        LOG_INFO("✓ Excellent speedup! Speculative decoding is working well.");
-    }
-
-    return generated_tokens;
-}
-
-// ============================================================
-// 起草阶段 (使用小模型)
-// ============================================================
-
-std::vector<int> SpeculativeDecoder::draftTokens(
-    const std::vector<int>& input_tokens,
-    int K,
-    float temperature
-) {
-    std::lock_guard<std::mutex> lock(draft_mutex_);
-
-    if (!draft_ctx_) {
-        LOG_ERROR("Draft context is null");
+    if (n_tokens < 0) {
+        std::cerr << "[SpecDecoder] ERROR: Tokenization failed\n";
         return {};
     }
 
-    std::vector<int> drafted;
-    drafted.reserve(K);
-
-    // 清空draft context的KV cache (使用独立序列)
-    llama_kv_cache_clear(draft_ctx_);
-
-    // 处理输入tokens (prompt + 已生成的tokens)
-    llama_batch batch = llama_batch_init(input_tokens.size() + K, 0, 1);
-
-    // 先处理所有输入tokens (prefill阶段)
-    for (size_t i = 0; i < input_tokens.size(); ++i) {
-        batch_add(batch, input_tokens[i], i, {0}, false);
-    }
-
-    // 最后一个token需要输出logits
-    if (batch.n_tokens > 0) {
-        batch.logits[batch.n_tokens - 1] = true;
-    }
-
-    // Prefill阶段
-    if (llama_decode(draft_ctx_, batch) != 0) {
-        LOG_ERROR("Draft prefill failed");
-        llama_batch_free(batch);
-        return {};
-    }
-
-    // 自回归生成K个tokens
-    int n_cur = input_tokens.size();
-    for (int i = 0; i < K; ++i) {
-        // 采样下一个token
-        int next_token = sampleToken(draft_ctx_, temperature);
-
-        drafted.push_back(next_token);
-
-        // 准备下一次decode
-        batch_clear(batch);
-        batch_add(batch, next_token, n_cur, {0}, true);
-
-        if (llama_decode(draft_ctx_, batch) != 0) {
-            LOG_WARN("Draft decode failed at token " + std::to_string(i));
-            break;
-        }
-
-        n_cur++;
-    }
-
-    llama_batch_free(batch);
-    return drafted;
+    tokens.resize(n_tokens);
+    return tokens;
 }
 
-// ============================================================
-// 校验阶段 (使用大模型批量校验)
-// ============================================================
+std::string SpeculativeDecoder::detokenize(llama_token token) const {
+    if (!model_tgt_) return "";
 
-SpeculativeDecoder::VerifyResult SpeculativeDecoder::verifyTokensBatch(
-    llama_context* verifier_ctx,
-    const std::vector<int>& input_tokens,
-    const std::vector<int>& draft_tokens,
-    float temperature
-) {
-    VerifyResult result;
-    result.accepted_count = 0;
+    const llama_vocab* vocab = llama_model_get_vocab(model_tgt_);
 
-    if (draft_tokens.empty()) {
-        return result;
+    char buffer[256] = {0};
+    int n = llama_token_to_piece(vocab, token, buffer, sizeof(buffer), 0, false);
+
+    if (n < 0) {
+        std::cerr << "[SpecDecoder] ERROR: Detokenization failed for token " << token << "\n";
+        return "";
     }
 
-    // ============================================================
-    // 推测式解码核心: 批量校验draft tokens
-    // ============================================================
-    // 原理:
-    // 1. Verifier一次性处理所有K个draft tokens (批量prefill)
-    // 2. 对比每个位置上verifier和drafter的概率分布
-    // 3. 从左到右接受tokens,直到遇到第一个拒绝的token
-    // 4. 如果所有draft tokens都被接受,verifier额外生成1个token
-    // ============================================================
+    return std::string(buffer, n);
+}
 
-    llama_batch batch = llama_batch_init(draft_tokens.size() + 1, 0, 1);
+std::string SpeculativeDecoder::detokenize(const std::vector<llama_token>& tokens) const {
+    std::string result;
+    result.reserve(tokens.size() * 4);
 
-    // ======== 阶段1: 批量处理所有draft tokens ========
-    // 构造batch: 包含所有draft tokens
-    int n_cur = input_tokens.size();  // 当前位置(在输入序列之后)
-
-    for (size_t i = 0; i < draft_tokens.size(); ++i) {
-        // 添加draft token到batch
-        // logits=true 表示我们需要获取这个位置的输出概率分布
-        batch_add(batch, draft_tokens[i], n_cur + i, {0}, true);
+    for (llama_token token : tokens) {
+        result += detokenize(token);
     }
-
-    // 执行批量推理 (单次forward pass处理所有K个tokens)
-    if (llama_decode(verifier_ctx, batch) != 0) {
-        LOG_ERROR("Verifier batch decode failed");
-        llama_batch_free(batch);
-        return result;
-    }
-
-    // ======== 阶段2: 逐个校验draft tokens ========
-    bool all_accepted = true;
-
-    for (size_t i = 0; i < draft_tokens.size(); ++i) {
-        // 获取verifier在位置i的logits
-        float* verifier_logits = llama_get_logits_ith(verifier_ctx, i);
-        if (!verifier_logits) {
-            LOG_ERROR("Failed to get verifier logits at position " + std::to_string(i));
-            all_accepted = false;
-            break;
-        }
-
-        int draft_token = draft_tokens[i];
-        const llama_vocab* vocab = llama_model_get_vocab(llama_get_model(verifier_ctx));
-        int n_vocab = llama_vocab_n_tokens(vocab);
-
-        // 方法1: 贪婪校验 (简化版)
-        // 如果temperature很低,使用贪婪采样
-        if (temperature < 0.01f) {
-            // 找到verifier的top-1 token
-            int verifier_top_token = 0;
-            float max_logit = verifier_logits[0];
-            for (int t = 1; t < n_vocab; ++t) {
-                if (verifier_logits[t] > max_logit) {
-                    max_logit = verifier_logits[t];
-                    verifier_top_token = t;
-                }
-            }
-
-            // 检查draft token是否匹配
-            if (draft_token == verifier_top_token) {
-                result.accepted_tokens.push_back(draft_token);
-                result.accepted_count++;
-            } else {
-                // 拒绝: 使用verifier的token替代
-                result.accepted_tokens.push_back(verifier_top_token);
-                result.accepted_count++;
-                all_accepted = false;
-                break;  // 停止校验后续tokens
-            }
-        } else {
-            // 方法2: 概率匹配校验 (推荐)
-            // 计算draft token在verifier分布中的概率
-            float draft_token_prob = getTokenProbability(verifier_ctx, draft_token, i);
-
-            // 接受条件: draft token概率足够高
-            // 阈值可配置 (config_.rejection_threshold)
-            if (draft_token_prob > config_.rejection_threshold) {
-                result.accepted_tokens.push_back(draft_token);
-                result.accepted_count++;
-            } else {
-                // 拒绝: 从verifier的分布中重新采样
-                int resampled_token = sampleToken(verifier_ctx, temperature);
-                result.accepted_tokens.push_back(resampled_token);
-                result.accepted_count++;
-                all_accepted = false;
-                break;
-            }
-        }
-    }
-
-    // ======== 阶段3: 如果所有draft tokens都被接受,verifier额外生成1个token ========
-    if (all_accepted && result.accepted_count == (int)draft_tokens.size()) {
-        // 准备生成第K+1个token
-        batch_clear(batch);
-        int last_draft_token = draft_tokens.back();
-        batch_add(batch, last_draft_token, n_cur + draft_tokens.size() - 1, {0}, true);
-
-        if (llama_decode(verifier_ctx, batch) == 0) {
-            // 从verifier采样额外的token
-            int bonus_token = sampleToken(verifier_ctx, temperature);
-            result.accepted_tokens.push_back(bonus_token);
-            result.accepted_count++;
-            LOG_DEBUG("All draft tokens accepted + 1 bonus token from verifier");
-        }
-    }
-
-    llama_batch_free(batch);
-
-    LOG_DEBUG("Batch verification: accepted " +
-                 std::to_string(result.accepted_count) + "/" +
-                 std::to_string(draft_tokens.size()) + " draft tokens");
 
     return result;
 }
 
 // ============================================================
-// 辅助方法
+// 辅助函数：采样
 // ============================================================
 
-int SpeculativeDecoder::sampleToken(llama_context* ctx, float temperature) const {
+llama_token SpeculativeDecoder::sampleGreedy(llama_context* ctx) {
     if (!ctx) return -1;
 
-    // 获取logits
-    float* logits = llama_get_logits_ith(ctx, -1);
-    if (!logits) return -1;
+    const llama_vocab* vocab = llama_model_get_vocab(
+        ctx == ctx_tgt_ ? model_tgt_ : model_dft_
+    );
+    const int n_vocab = llama_vocab_n_tokens(vocab);
+    const float* logits = llama_get_logits(ctx);
 
-    const llama_vocab* vocab = llama_model_get_vocab(llama_get_model(ctx));
-    int n_vocab = llama_vocab_n_tokens(vocab);
-
-    // 简单的温度采样 (贪婪采样如果temperature接近0)
-    if (temperature < 0.01f) {
-        // 贪婪采样: 找最大概率的token
-        int max_idx = 0;
-        float max_logit = logits[0];
-        for (int i = 1; i < n_vocab; ++i) {
-            if (logits[i] > max_logit) {
-                max_logit = logits[i];
-                max_idx = i;
-            }
-        }
-        return max_idx;
+    if (!logits) {
+        std::cerr << "[SpecDecoder] ERROR: No logits available\n";
+        return -1;
     }
 
-    // TODO: 实现完整的温度采样
-    // 当前简化版: 贪婪采样
-    int max_idx = 0;
-    float max_logit = logits[0];
+    // 贪婪采样：选择概率最大的 token
+    int best_token = 0;
+    float best_logit = logits[0];
+
     for (int i = 1; i < n_vocab; ++i) {
-        if (logits[i] > max_logit) {
-            max_logit = logits[i];
-            max_idx = i;
+        if (logits[i] > best_logit) {
+            best_logit = logits[i];
+            best_token = i;
         }
     }
-    return max_idx;
+
+    return best_token;
 }
 
-float SpeculativeDecoder::getTokenProbability(llama_context* ctx, int token, int pos) const {
+llama_token SpeculativeDecoder::sampleToken(
+    llama_context* ctx,
+    float temperature,
+    int top_k,
+    float top_p
+) {
+    if (!ctx) return -1;
+
+    // 简化实现：使用贪婪采样
+    // TODO: 实现完整的 top-k/top-p 采样
+    return sampleGreedy(ctx);
+}
+
+float SpeculativeDecoder::getTokenProb(llama_context* ctx, llama_token token) {
     if (!ctx) return 0.0f;
 
-    float* logits = llama_get_logits_ith(ctx, pos);
-    if (!logits) return 0.0f;
+    const llama_vocab* vocab = llama_model_get_vocab(
+        ctx == ctx_tgt_ ? model_tgt_ : model_dft_
+    );
+    const int n_vocab = llama_vocab_n_tokens(vocab);
 
-    const llama_vocab* vocab = llama_model_get_vocab(llama_get_model(ctx));
-    int n_vocab = llama_vocab_n_tokens(vocab);
     if (token < 0 || token >= n_vocab) return 0.0f;
 
-    // 计算softmax概率
-    // TODO: 优化 - 可以只计算需要的token概率
+    const float* logits = llama_get_logits(ctx);
+    if (!logits) return 0.0f;
+
+    // 计算 softmax 概率
     float max_logit = logits[0];
     for (int i = 1; i < n_vocab; ++i) {
-        if (logits[i] > max_logit) max_logit = logits[i];
+        max_logit = std::max(max_logit, logits[i]);
     }
 
     float sum_exp = 0.0f;
@@ -668,188 +281,795 @@ float SpeculativeDecoder::getTokenProbability(llama_context* ctx, int token, int
     return prob;
 }
 
-void SpeculativeDecoder::adjustKValue(float current_acceptance_rate) {
-    int current_K = stats_.current_K.load(std::memory_order_relaxed);
+// 从指定的logits数组计算token概率 (修复版本)
+float SpeculativeDecoder::getTokenProbFromLogits(
+    const float* logits,
+    int n_vocab,
+    llama_token token
+) {
+    if (!logits || token < 0 || token >= n_vocab) return 0.0f;
 
-    if (current_acceptance_rate < config_.target_acceptance_rate - 0.1f) {
-        // 接受率过低,减小K
-        stats_.consecutive_low_accept.fetch_add(1, std::memory_order_relaxed);
-        stats_.consecutive_high_accept.store(0, std::memory_order_relaxed);
+    // 计算 softmax 概率
+    float max_logit = logits[0];
+    for (int i = 1; i < n_vocab; ++i) {
+        max_logit = std::max(max_logit, logits[i]);
+    }
 
-        if (stats_.consecutive_low_accept.load() >= 3 && current_K > config_.min_K) {
-            int new_K = std::max(config_.min_K, current_K - 1);
-            stats_.current_K.store(new_K, std::memory_order_relaxed);
-            stats_.consecutive_low_accept.store(0, std::memory_order_relaxed);
-            LOG_INFO("Reduced K from " + std::to_string(current_K) + " to " + std::to_string(new_K));
+    float sum_exp = 0.0f;
+    for (int i = 0; i < n_vocab; ++i) {
+        sum_exp += std::exp(logits[i] - max_logit);
+    }
+
+    float prob = std::exp(logits[token] - max_logit) / sum_exp;
+    return prob;
+}
+
+// 从指定的logits数组采样token (完整实现)
+llama_token SpeculativeDecoder::sampleTokenFromLogits(
+    const float* logits,
+    int n_vocab,
+    float temperature
+) {
+    if (!logits) return -1;
+
+    if (temperature < 0.01f) {
+        // 贪婪采样
+        int best_token = 0;
+        float best_logit = logits[0];
+        for (int i = 1; i < n_vocab; ++i) {
+            if (logits[i] > best_logit) {
+                best_logit = logits[i];
+                best_token = i;
+            }
         }
-    } else if (current_acceptance_rate > config_.target_acceptance_rate + 0.1f) {
-        // 接受率过高,增大K
-        stats_.consecutive_high_accept.fetch_add(1, std::memory_order_relaxed);
-        stats_.consecutive_low_accept.store(0, std::memory_order_relaxed);
+        return best_token;
+    } else {
+        // 完整的temperature采样实现
 
-        if (stats_.consecutive_high_accept.load() >= 3 && current_K < config_.max_K) {
-            int new_K = std::min(config_.max_K, current_K + 1);
-            stats_.current_K.store(new_K, std::memory_order_relaxed);
-            stats_.consecutive_high_accept.store(0, std::memory_order_relaxed);
-            LOG_INFO("Increased K from " + std::to_string(current_K) + " to " + std::to_string(new_K));
+        // 1. 找到最大logit (数值稳定性)
+        float max_logit = logits[0];
+        for (int i = 1; i < n_vocab; ++i) {
+            max_logit = std::max(max_logit, logits[i]);
         }
+
+        // 2. 应用temperature并计算exp (softmax)
+        std::vector<float> probs(n_vocab);
+        float sum_exp = 0.0f;
+        for (int i = 0; i < n_vocab; ++i) {
+            probs[i] = std::exp((logits[i] - max_logit) / temperature);
+            sum_exp += probs[i];
+        }
+
+        // 3. 归一化概率
+        for (int i = 0; i < n_vocab; ++i) {
+            probs[i] /= sum_exp;
+        }
+
+        // 4. 随机采样 (基于累积分布)
+        float rand_val = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+        float cumsum = 0.0f;
+        for (int i = 0; i < n_vocab; ++i) {
+            cumsum += probs[i];
+            if (rand_val < cumsum) {
+                return static_cast<llama_token>(i);
+            }
+        }
+
+        // Fallback (数值误差)
+        return static_cast<llama_token>(n_vocab - 1);
     }
 }
 
 // ============================================================
-// 智能K值调整 (算法优化核心)
+// 核心算法：Draft 生成
 // ============================================================
-void SpeculativeDecoder::smartAdjustK(float temperature) {
-    // 获取近期接受率 (滑动窗口)
-    float recent_rate = stats_.getRecentAcceptanceRate();
-    int current_K = stats_.current_K.load(std::memory_order_relaxed);
 
-    // 算法1: 温度自适应调整
-    // 高温度(>0.7)会降低接受率,应使用更小的K
-    // 低温度(<0.3)会提高接受率,可以使用更大的K
-    float temp_factor = 1.0f;
-    if (temperature > 0.7f) {
-        temp_factor = 0.7f;  // 高温度惩罚,倾向减小K
-    } else if (temperature < 0.3f) {
-        temp_factor = 1.3f;  // 低温度奖励,倾向增大K
+std::vector<llama_token> SpeculativeDecoder::genDraft(
+    const std::vector<llama_token>& prompt,
+    llama_token last_token,
+    int n_past
+) {
+    if (!ctx_dft_) {
+        if (config_.verbose) {
+            std::cerr << "[Draft] ERROR: Draft context not initialized\n";
+        }
+        return {};
     }
 
-    // 算法2: 基于近期趋势的激进调整
-    // 如果近期接受率持续低于20%,说明drafter太弱,快速降低K
-    if (recent_rate < 0.2f && current_K > config_.min_K) {
-        int new_K = std::max(config_.min_K, current_K - 2);  // 一次降2个
-        stats_.current_K.store(new_K, std::memory_order_relaxed);
-        stats_.consecutive_low_accept.store(0, std::memory_order_relaxed);
-        LOG_WARN("Critical low acceptance (" + std::to_string(static_cast<int>(recent_rate * 100)) +
-                 "%), aggressively reduced K: " + std::to_string(current_K) + " -> " + std::to_string(new_K));
+    std::vector<llama_token> draft;
+    draft.reserve(config_.n_draft);
+
+    const llama_vocab* vocab_dft = llama_model_get_vocab(model_dft_);
+    const int n_vocab = llama_vocab_n_tokens(vocab_dft);
+
+    if (config_.verbose) {
+        std::cerr << "[Draft] Generating up to " << config_.n_draft << " tokens...\n";
+    }
+
+    // 用于收集本轮draft的置信度数据
+    std::vector<float> draft_confidences;
+    draft_confidences.reserve(config_.n_draft);
+
+    // 自回归生成 N 个 draft tokens
+    llama_token current = last_token;
+
+    for (int i = 0; i < config_.n_draft; ++i) {
+        // 构造 batch（单个 token）
+        llama_batch batch = llama_batch_init(1, 0, 1);
+        batch.token[0] = current;
+        batch.pos[0] = n_past + i;
+        batch.seq_id[0][0] = 0;
+        batch.n_seq_id[0] = 1;
+        batch.logits[0] = 1;
+        batch.n_tokens = 1;
+
+        // 推理
+        if (llama_decode(ctx_dft_, batch) != 0) {
+            if (config_.verbose) {
+                std::cerr << "[Draft] Decode failed at step " << i << "\n";
+            }
+            llama_batch_free(batch);
+            break;
+        }
+        llama_batch_free(batch);
+
+        // 采样下一个 token
+        // 边缘计算优化: 使用greedy采样确保最高接受率
+        llama_token next = sampleToken(ctx_dft_, 0.0f, config_.top_k, config_.top_p);  // temperature=0 (greedy)
+
+        if (next < 0) {
+            if (config_.verbose) {
+                std::cerr << "[Draft] Sampling failed at step " << i << "\n";
+            }
+            break;
+        }
+
+        // ============ Phase 2: Token置信度计算 ============
+        float token_confidence = 0.0f;
+        if (config_.enable_confidence_guide) {
+            const float* logits = llama_get_logits(ctx_dft_);
+            if (logits && n_vocab > 0) {
+                std::vector<float> logits_vec(logits, logits + n_vocab);
+                token_confidence = TokenConfidenceCalculator::calculate(logits_vec);
+                draft_confidences.push_back(token_confidence);
+
+                if (config_.confidence_verbose) {
+                    std::cerr << "[ConfidenceGuide] Token " << i
+                              << " confidence: " << token_confidence << "\n";
+                }
+            }
+        }
+
+        // 置信度检查（可选）
+        if (config_.p_min > 0.0f) {
+            float prob = getTokenProb(ctx_dft_, next);
+            if (prob < config_.p_min) {
+                if (config_.verbose) {
+                    std::cerr << "[Draft] Low confidence " << prob << " < " << config_.p_min
+                              << " at step " << i << ", stopping\n";
+                }
+                break;
+            }
+        }
+
+        draft.push_back(next);
+        current = next;
+
+        // EOS 检查
+        if (llama_vocab_is_eog(vocab_dft, next)) {
+            if (config_.verbose) {
+                std::cerr << "[Draft] EOS detected at step " << i << "\n";
+            }
+            break;
+        }
+    }
+
+    // ============ Phase 2: 基于置信度调整下一轮的n_draft ============
+    if (config_.enable_confidence_guide && !draft_confidences.empty() && confidence_strategy_) {
+        float avg_confidence = std::accumulate(draft_confidences.begin(),
+                                              draft_confidences.end(), 0.0f)
+                              / draft_confidences.size();
+
+        int new_n_draft = confidence_strategy_->adjustDraftSize(avg_confidence, config_.n_draft);
+
+        if (new_n_draft != config_.n_draft) {
+            std::lock_guard<std::mutex> lock(stats_mutex_);
+            stats_.n_confidence_adjustments++;
+            config_.n_draft = new_n_draft;
+        }
+
+        // 更新统计数据
+        std::lock_guard<std::mutex> lock(stats_mutex_);
+        stats_.n_confidence_samples += draft_confidences.size();
+
+        float sum = std::accumulate(draft_confidences.begin(), draft_confidences.end(), 0.0f);
+        stats_.average_confidence = (stats_.average_confidence * (stats_.n_confidence_samples - draft_confidences.size())
+                                    + sum) / stats_.n_confidence_samples;
+
+        stats_.min_confidence = std::min(stats_.min_confidence,
+                                        *std::min_element(draft_confidences.begin(), draft_confidences.end()));
+        stats_.max_confidence = std::max(stats_.max_confidence,
+                                        *std::max_element(draft_confidences.begin(), draft_confidences.end()));
+    }
+
+    if (config_.verbose) {
+        std::cerr << "[Draft] Generated " << draft.size() << " tokens\n";
+    }
+
+    return draft;
+}
+
+// ============================================================
+// 核心算法：验证与接受
+// ============================================================
+
+std::vector<llama_token> SpeculativeDecoder::verifyAndAccept(
+    const std::vector<llama_token>& draft,
+    llama_token last_token,
+    int n_past,
+    float temperature
+) {
+    if (!ctx_tgt_) {
+        std::cerr << "[Verify] ERROR: Target context not initialized\n";
+        return {};
+    }
+
+    std::vector<llama_token> accepted;
+    float temp = temperature;  // Shorthand for readability
+
+    // 跳过太短的 draft
+    if ((int)draft.size() < config_.n_draft_min) {
+        if (config_.verbose) {
+            std::cerr << "[Verify] Draft too short (" << draft.size()
+                      << " < " << config_.n_draft_min << "), skipping\n";
+        }
+        return accepted;
+    }
+
+    // 1. 构造 batch: [last_token, draft[0], draft[1], ..., draft[N-1]]
+    int batch_size = 1 + draft.size();
+    llama_batch batch = llama_batch_init(batch_size, 0, 1);
+
+    // 添加 last_token
+    batch.token[0] = last_token;
+    batch.pos[0] = n_past;
+    batch.seq_id[0][0] = 0;
+    batch.n_seq_id[0] = 1;
+    batch.logits[0] = 1;
+
+    // 添加 draft tokens
+    for (size_t i = 0; i < draft.size(); ++i) {
+        batch.token[i + 1] = draft[i];
+        batch.pos[i + 1] = n_past + 1 + i;
+        batch.seq_id[i + 1][0] = 0;
+        batch.n_seq_id[i + 1] = 1;
+        batch.logits[i + 1] = 1;
+    }
+    batch.n_tokens = batch_size;
+
+    if (config_.verbose) {
+        std::cerr << "[Verify] Batch size: " << batch_size << " (1 + " << draft.size() << " draft)\n";
+    }
+
+    // 2. 大模型验证
+    if (llama_decode(ctx_tgt_, batch) != 0) {
+        std::cerr << "[Verify] ERROR: Decode failed\n";
+        llama_batch_free(batch);
+        return accepted;
+    }
+
+    // 3. 逐个验证并接受 (优化版本: 基于概率阈值)
+    const llama_vocab* vocab_tgt = llama_model_get_vocab(model_tgt_);
+    const int n_vocab = llama_vocab_n_tokens(vocab_tgt);
+    const float PROB_THRESHOLD = 0.001f;  // 概率阈值: 0.1%以上即接受 (降低以适配Q2模型)
+
+    // CRITICAL FIX: Position i的logits对应的是draft[i]的验证，而不是draft[i-1]!
+    // batch[0]=last_token → logits[0]用于验证draft[0]
+    // batch[1]=draft[0]   → logits[1]用于验证draft[1]
+    // batch[2]=draft[1]   → logits[2]用于验证draft[2]
+
+    for (size_t i = 0; i < batch_size; ++i) {
+        // 获取当前位置的 logits
+        const float* logits = llama_get_logits_ith(ctx_tgt_, i);
+        if (!logits) {
+            if (config_.verbose) {
+                std::cerr << "[Verify] No logits at position " << i << "\n";
+            }
+            break;
+        }
+
+        // 检查是否还有draft token需要验证
+        if (i >= draft.size()) {
+            // 所有draft都验证完了，这是最后一个位置，采样新token
+            llama_token sampled = sampleTokenFromLogits(logits, n_vocab, temp);
+            if (sampled < 0) {
+                if (config_.verbose) {
+                    std::cerr << "[Verify] Sampling failed at position " << i << "\n";
+                }
+                break;
+            }
+            accepted.push_back(sampled);
+            if (config_.verbose) {
+                std::cerr << "[Verify] Position " << i << ": sampled new token " << sampled << " (temp=" << temp << ")\n";
+            }
+            break;  // 只采样一个新token
+        }
+
+        // 验证 draft token (修复: position i 验证 draft[i])
+        llama_token draft_token = draft[i];
+
+        // 计算draft token在target分布中的概率
+        float draft_prob = getTokenProbFromLogits(logits, n_vocab, draft_token);
+
+        if (draft_prob >= PROB_THRESHOLD) {
+            // 接受: draft token概率足够高
+            accepted.push_back(draft_token);
+            if (config_.verbose) {
+                std::cerr << "[Verify] ✓ Position " << i << ": accepted draft[" << i
+                          << "] = " << draft_token << " (prob=" << (draft_prob * 100.0f) << "%)\n";
+            }
+        } else {
+            // 拒绝: 概率太低，采样新token (使用相同温度)
+            llama_token sampled = sampleTokenFromLogits(logits, n_vocab, temp);  // 使用temp!
+            if (sampled < 0) {
+                if (config_.verbose) {
+                    std::cerr << "[Verify] Sampling failed at position " << i << "\n";
+                }
+                break;
+            }
+            accepted.push_back(sampled);
+            if (config_.verbose) {
+                std::cerr << "[Verify] ✗ Position " << i << ": rejected draft[" << i
+                          << "] = " << draft_token << " (prob=" << (draft_prob * 100.0f)
+                          << "% < " << (PROB_THRESHOLD * 100.0f) << "%), sampled " << sampled << " (temp=" << temp << ") instead\n";
+            }
+            break;  // 拒绝后终止
+        }
+    }
+
+    llama_batch_free(batch);
+
+    if (config_.verbose) {
+        std::cerr << "[Verify] Accepted " << accepted.size() << " / " << (draft.size() + 1)
+                  << " tokens (" << (accepted.size() - 1) << " draft)\n";
+    }
+
+    return accepted;
+}
+
+// ============================================================
+// 主推理循环
+// ============================================================
+
+std::vector<llama_token> SpeculativeDecoder::inferTokens(
+    const std::vector<llama_token>& prompt_tokens,
+    int max_tokens,
+    float temperature
+) {
+    if (!ctx_tgt_ || !ctx_dft_) {
+        std::cerr << "[SpecDecoder] ERROR: Models not initialized\n";
+        return {};
+    }
+
+    std::vector<llama_token> result;
+    result.reserve(max_tokens);
+
+    // 使用配置中的 temperature，除非显式指定
+    // 注意: temperature=0.0是有效值(greedy)，只有负值才使用默认值
+    float temp = (temperature < 0.0f) ? config_.temperature : temperature;
+
+    // ============ 任务感知优化 ============
+    // 根据prompt内容自动调整配置
+    if (config_.enable_task_aware && task_classifier_) {
+        // 将tokens转换为文本用于分类
+        std::string prompt_text = detokenize(prompt_tokens);
+
+        // 分类任务类型
+        auto classification = task_classifier_->classify(prompt_text);
+
+        // 应用任务特定配置
+        config_.n_draft = classification.config.n_draft;
+        config_.n_draft_min_adaptive = classification.config.n_draft_min;
+        config_.n_draft_max = classification.config.n_draft_max;
+        config_.accept_rate_high = classification.config.accept_rate_high;
+        config_.accept_rate_low = classification.config.accept_rate_low;
+
+        // 更新统计信息
+        {
+            std::lock_guard<std::mutex> g(stats_mutex_);
+            stats_.detected_task_type = taskTypeToString(classification.task_type);
+            stats_.task_classification_confidence = classification.confidence;
+            stats_.n_draft_current = config_.n_draft;
+        }
+
+        if (config_.verbose || config_.task_aware_verbose) {
+            std::cout << "[SpecDecoder] Task detected: " << taskTypeToString(classification.task_type)
+                      << " (confidence: " << (classification.confidence * 100.0f) << "%)\n";
+            std::cout << "[SpecDecoder] Applied task-specific config: n_draft=" << config_.n_draft
+                      << ", accept_rate_range=[" << config_.accept_rate_low
+                      << ", " << config_.accept_rate_high << "]\n";
+        }
+    }
+
+    std::cout << "[SpecDecoder] Starting inference: max_tokens=" << max_tokens
+              << ", temperature=" << temp << "\n";
+
+    // 设置随机数种子 (确保可重复性，但draft和target仍会有随机性)
+    // 注意: 推测式解码依赖概率验证，不需要完全相同的随机序列
+    srand(static_cast<unsigned int>(time(nullptr)));
+
+    // Clear KV cache before each inference to avoid position conflicts
+    llama_memory_clear(llama_get_memory(ctx_tgt_), true);
+    llama_memory_clear(llama_get_memory(ctx_dft_), true);
+
+    auto t_start = now();
+
+    // 1. 处理 prompt（除最后一个 token）
+    if (prompt_tokens.size() < 2) {
+        std::cerr << "[SpecDecoder] ERROR: Prompt too short\n";
+        return {};
+    }
+
+    int prompt_size = prompt_tokens.size() - 1;
+    llama_batch batch_prompt = llama_batch_init(prompt_size, 0, 1);
+
+    for (int i = 0; i < prompt_size; ++i) {
+        batch_prompt.token[i] = prompt_tokens[i];
+        batch_prompt.pos[i] = i;
+        batch_prompt.seq_id[i][0] = 0;
+        batch_prompt.n_seq_id[i] = 1;
+        batch_prompt.logits[i] = (i == prompt_size - 1);
+    }
+    batch_prompt.n_tokens = prompt_size;
+
+    std::cout << "[SpecDecoder] Processing prompt (" << prompt_size << " tokens)...\n";
+
+    // Feed prompt to TARGET model
+    if (llama_decode(ctx_tgt_, batch_prompt) != 0) {
+        std::cerr << "[SpecDecoder] ERROR: Prompt decode failed (target)\n";
+        llama_batch_free(batch_prompt);
+        return {};
+    }
+
+    // Feed prompt to DRAFT model as well (CRITICAL FIX)
+    if (llama_decode(ctx_dft_, batch_prompt) != 0) {
+        std::cerr << "[SpecDecoder] ERROR: Prompt decode failed (draft)\n";
+        llama_batch_free(batch_prompt);
+        return {};
+    }
+
+    llama_batch_free(batch_prompt);
+
+    llama_token last_token = prompt_tokens.back();
+    int n_past = prompt_size;
+    int n_predict = 0;
+
+    const llama_vocab* vocab_tgt = llama_model_get_vocab(model_tgt_);
+
+    std::cout << "[SpecDecoder] Starting generation loop...\n";
+
+    // 2. 主循环
+    while (n_predict < max_tokens) {
+        auto t_iter_start = now();
+
+        // (1) Draft 生成
+        auto t_draft_start = now();
+        std::vector<llama_token> draft = genDraft(prompt_tokens, last_token, n_past);
+        auto t_draft_end = now();
+
+        stats_.n_drafted += draft.size();
+        stats_.time_draft_ms += elapsedMs(t_draft_start, t_draft_end);
+
+        // (2) Verify 并接受 (边缘计算优化: 使用greedy确保最高接受率)
+        auto t_verify_start = now();
+        std::vector<llama_token> accepted = verifyAndAccept(draft, last_token, n_past, 0.0f);  // greedy
+        auto t_verify_end = now();
+
+        stats_.time_verify_ms += elapsedMs(t_verify_start, t_verify_end);
+
+        // Fallback: 如果 draft 太短或全部被拒绝，单步推理
+        if (accepted.empty()) {
+            if (config_.verbose) {
+                std::cerr << "[SpecDecoder] No accepted tokens, falling back to single-step\n";
+            }
+
+            llama_batch batch_single = llama_batch_init(1, 0, 1);
+            batch_single.token[0] = last_token;
+            batch_single.pos[0] = n_past;
+            batch_single.seq_id[0][0] = 0;
+            batch_single.n_seq_id[0] = 1;
+            batch_single.logits[0] = 1;
+            batch_single.n_tokens = 1;
+
+            if (llama_decode(ctx_tgt_, batch_single) != 0) {
+                std::cerr << "[SpecDecoder] ERROR: Fallback decode failed\n";
+                llama_batch_free(batch_single);
+                break;
+            }
+
+            llama_token next = sampleToken(ctx_tgt_, temp, config_.top_k, config_.top_p);
+            llama_batch_free(batch_single);
+
+            if (next < 0) {
+                std::cerr << "[SpecDecoder] ERROR: Fallback sampling failed\n";
+                break;
+            }
+
+            accepted.push_back(next);
+        }
+
+        // (3) 更新统计
+        // accepted 包含：第一个总是新采样的，后续是被接受的 draft
+        stats_.n_accepted += (accepted.size() - 1);
+        stats_.n_predict += accepted.size();
+
+        // (3.5) 自适应调整
+        if (config_.enable_adaptive && draft.size() > 0) {
+            // 计算当前轮次的接受率
+            double current_accept_rate = (double)(accepted.size() - 1) / draft.size();
+
+            // 更新滑动窗口
+            updateAcceptRateWindow(current_accept_rate);
+
+            // 每隔一定次数调整一次 draft 数量（避免过于频繁调整）
+            if (n_predict % 5 == 0) {  // 每生成5个token检查一次
+                adjustDraftCount();
+            }
+        }
+
+        // (4) 输出并更新状态
+        for (size_t i = 0; i < accepted.size(); ++i) {
+            result.push_back(accepted[i]);
+            last_token = accepted[i];
+
+            // EOS 检测
+            if (llama_vocab_is_eog(vocab_tgt, last_token)) {
+                std::cout << "[SpecDecoder] EOS detected, stopping\n";
+                goto done;
+            }
+        }
+
+        n_past += accepted.size();
+        n_predict += accepted.size();
+
+        // (5) 清理未接受的 KV cache (both target and draft)
+        llama_memory_seq_rm(llama_get_memory(ctx_tgt_), 0, n_past, -1);
+        llama_memory_seq_rm(llama_get_memory(ctx_dft_), 0, n_past, -1);
+
+        // 进度显示
+        if (n_predict % 10 == 0 || config_.verbose) {
+            std::cout << "[SpecDecoder] Generated " << n_predict << " / " << max_tokens
+                      << " tokens (accept_rate=" << (stats_.n_drafted > 0 ?
+                         (double)stats_.n_accepted / stats_.n_drafted : 0.0) << ")\n";
+        }
+    }
+
+done:
+    auto t_end = now();
+    stats_.time_total_ms = elapsedMs(t_start, t_end);
+
+    // 计算最终统计
+    stats_.accept_rate = stats_.n_drafted > 0 ? (double)stats_.n_accepted / stats_.n_drafted : 0.0;
+
+    // 估算加速比（相对于传统自回归）
+    // Speedup = Time_normal / Time_spec
+    // Time_normal ≈ n_predict × T_target
+    // Time_spec = measured
+    // 我们使用 verify 时间作为 T_target 的估计
+    double avg_verify_time = stats_.n_predict > 0 ? stats_.time_verify_ms / stats_.n_predict : 1.0;
+    double estimated_normal_time = stats_.n_predict * avg_verify_time;
+    stats_.speedup = estimated_normal_time > 0 ? estimated_normal_time / stats_.time_total_ms : 1.0;
+
+    std::cout << "[SpecDecoder] ✅ Generation complete!\n";
+    printStats();
+
+    return result;
+}
+
+std::string SpeculativeDecoder::infer(
+    const std::string& prompt,
+    int max_tokens,
+    float temperature
+) {
+    std::cout << "[SpecDecoder] Tokenizing prompt...\n";
+    auto tokens = tokenize(prompt);
+
+    if (tokens.empty()) {
+        std::cerr << "[SpecDecoder] ERROR: Tokenization failed\n";
+        return "";
+    }
+
+    std::cout << "[SpecDecoder] Prompt: " << tokens.size() << " tokens\n";
+
+    auto result_tokens = inferTokens(tokens, max_tokens, temperature);
+
+    return detokenize(result_tokens);
+}
+
+// ============================================================
+// 统计功能
+// ============================================================
+
+SpeculativeDecoder::Stats SpeculativeDecoder::getStats() const {
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    return stats_;
+}
+
+void SpeculativeDecoder::resetStats() {
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+    stats_ = Stats();
+}
+
+void SpeculativeDecoder::printStats() const {
+    std::lock_guard<std::mutex> lock(stats_mutex_);
+
+    std::cout << "\n";
+    std::cout << "========== Speculative Decoding Statistics ==========\n";
+    std::cout << "Generated tokens:    " << stats_.n_predict << "\n";
+    std::cout << "Drafted tokens:      " << stats_.n_drafted << "\n";
+    std::cout << "Accepted tokens:     " << stats_.n_accepted << "\n";
+    std::cout << "Accept rate:         " << (stats_.accept_rate * 100.0) << "%\n";
+    std::cout << "Speedup:             " << stats_.speedup << "x\n";
+    std::cout << "Time (draft):        " << stats_.time_draft_ms << " ms\n";
+    std::cout << "Time (verify):       " << stats_.time_verify_ms << " ms\n";
+    std::cout << "Time (total):        " << stats_.time_total_ms << " ms\n";
+    std::cout << "Tokens per second:   " << stats_.tokens_per_sec() << "\n";
+    std::cout << "Ms per token:        " << stats_.ms_per_token() << "\n";
+
+    // 自适应统计（如果启用）
+    if (config_.enable_adaptive) {
+        std::cout << "\n--- Adaptive Statistics ---\n";
+        std::cout << "Current n_draft:     " << stats_.n_draft_current << "\n";
+        std::cout << "Recent accept rate:  " << (stats_.recent_accept_rate * 100.0) << "%\n";
+        std::cout << "Total adjustments:   " << stats_.n_adjustments << "\n";
+        std::cout << "  - Increased:       " << stats_.n_increased << "\n";
+        std::cout << "  - Decreased:       " << stats_.n_decreased << "\n";
+    }
+
+    if (config_.enable_temperature_aware) {
+        std::cout << "\n--- Temperature Aware ---\n";
+        std::cout << "Fallback count:      " << stats_.n_temperature_fallback << "\n";
+    }
+
+    if (config_.enable_task_aware) {
+        std::cout << "\n--- Task-Aware Optimization ---\n";
+        std::cout << "Detected task:       " << stats_.detected_task_type << "\n";
+        std::cout << "Confidence:          " << (stats_.task_classification_confidence * 100.0f) << "%\n";
+    }
+
+    if (config_.enable_confidence_guide && stats_.n_confidence_samples > 0) {
+        std::cout << "\n--- Confidence-Guided Optimization ---\n";
+        std::cout << "Average confidence:  " << std::fixed << std::setprecision(3)
+                  << stats_.average_confidence << "\n";
+        std::cout << "Min confidence:      " << stats_.min_confidence << "\n";
+        std::cout << "Max confidence:      " << stats_.max_confidence << "\n";
+        std::cout << "Confidence samples:  " << stats_.n_confidence_samples << "\n";
+        std::cout << "Adjustments:         " << stats_.n_confidence_adjustments << "\n";
+    }
+
+    std::cout << "====================================================\n";
+    std::cout << "\n";
+}
+
+// ============================================================
+// 自适应推测方法实现
+// ============================================================
+
+void SpeculativeDecoder::updateAcceptRateWindow(double current_accept_rate) const {
+    std::lock_guard<std::mutex> g(adaptive_mutex_);
+
+    // 添加当前接受率到滑动窗口
+    accept_rate_window_.push_back(current_accept_rate);
+
+    // 保持窗口大小在配置的范围内
+    while ((int)accept_rate_window_.size() > config_.window_size) {
+        accept_rate_window_.pop_front();
+    }
+
+    if (config_.verbose) {
+        std::cerr << "[Adaptive] Window size: " << accept_rate_window_.size()
+                  << ", Current accept rate: " << (current_accept_rate * 100.0) << "%\n";
+    }
+}
+
+double SpeculativeDecoder::calculateRecentAcceptRate() const {
+    std::lock_guard<std::mutex> g(adaptive_mutex_);
+
+    if (accept_rate_window_.empty()) {
+        return 0.0;
+    }
+
+    // 计算滑动窗口内的平均接受率
+    double sum = std::accumulate(accept_rate_window_.begin(),
+                                  accept_rate_window_.end(),
+                                  0.0);
+    return sum / accept_rate_window_.size();
+}
+
+void SpeculativeDecoder::adjustDraftCount() {
+    if (!config_.enable_adaptive) {
+        return;  // 未启用自适应，直接返回
+    }
+
+    std::lock_guard<std::mutex> g(adaptive_mutex_);
+
+    // 窗口数据不足，暂不调整
+    if ((int)accept_rate_window_.size() < config_.window_size / 2) {
         return;
     }
 
-    // 算法3: 基于效率的动态调整
-    // 计算当前配置的实际加速比
-    float current_speedup = stats_.getSpeedup();
-    uint64_t steps = stats_.total_steps.load(std::memory_order_relaxed);
+    // 计算最近的平均接受率
+    double recent_rate = 0.0;
+    for (double rate : accept_rate_window_) {
+        recent_rate += rate;
+    }
+    recent_rate /= accept_rate_window_.size();
 
-    if (steps >= 5) {  // 至少5步后才开始调整
-        // 如果加速比 < 1.2x,说明推测式解码效果不佳
-        if (current_speedup < 1.2f) {
-            // 尝试减小K提高接受率
-            if (current_K > config_.min_K) {
-                int new_K = std::max(config_.min_K, static_cast<int>(current_K * 0.8f));
-                stats_.current_K.store(new_K, std::memory_order_relaxed);
-                LOG_INFO("Low speedup (" + std::to_string(current_speedup) +
-                         "x), reduced K: " + std::to_string(current_K) + " -> " + std::to_string(new_K));
-                return;
-            }
+    // 更新统计信息
+    {
+        std::lock_guard<std::mutex> stats_g(stats_mutex_);
+        stats_.recent_accept_rate = recent_rate;
+    }
+
+    int old_n_draft = config_.n_draft;
+
+    // 根据接受率调整 draft 数量
+    if (recent_rate > config_.accept_rate_high) {
+        // 接受率高 → 增加 draft 数量
+        config_.n_draft = std::min(config_.n_draft_max,
+                                   config_.n_draft + config_.adjust_step);
+
+        if (config_.n_draft != old_n_draft) {
+            std::lock_guard<std::mutex> stats_g(stats_mutex_);
+            stats_.n_adjustments++;
+            stats_.n_increased++;
         }
-        // 如果加速比 > 2.0x 且接受率 > 60%,可以尝试增大K
-        else if (current_speedup > 2.0f && recent_rate > 0.6f && current_K < config_.max_K) {
-            int new_K = std::min(config_.max_K, current_K + 1);
-            stats_.current_K.store(new_K, std::memory_order_relaxed);
-            LOG_INFO("High speedup (" + std::to_string(current_speedup) +
-                     "x), increased K: " + std::to_string(current_K) + " -> " + std::to_string(new_K));
-            return;
+    }
+    else if (recent_rate < config_.accept_rate_low) {
+        // 接受率低 → 减少 draft 数量
+        config_.n_draft = std::max(config_.n_draft_min_adaptive,
+                                   config_.n_draft - config_.adjust_step);
+
+        if (config_.n_draft != old_n_draft) {
+            std::lock_guard<std::mutex> stats_g(stats_mutex_);
+            stats_.n_adjustments++;
+            stats_.n_decreased++;
         }
     }
 
-    // 算法4: 结合温度因子的常规调整
-    float adjusted_target = config_.target_acceptance_rate * temp_factor;
+    // 输出调整日志
+    if (config_.verbose && config_.n_draft != old_n_draft) {
+        std::cerr << "[Adaptive] Adjusted n_draft: " << old_n_draft
+                  << " → " << config_.n_draft
+                  << " (recent accept rate: " << (recent_rate * 100.0) << "%)\n";
+    }
 
-    if (recent_rate < adjusted_target - 0.15f) {
-        // 接受率明显低于目标
-        stats_.consecutive_low_accept.fetch_add(1, std::memory_order_relaxed);
-        stats_.consecutive_high_accept.store(0, std::memory_order_relaxed);
-
-        if (stats_.consecutive_low_accept.load() >= 2 && current_K > config_.min_K) {
-            int new_K = std::max(config_.min_K, current_K - 1);
-            stats_.current_K.store(new_K, std::memory_order_relaxed);
-            stats_.consecutive_low_accept.store(0, std::memory_order_relaxed);
-            LOG_INFO("Smart adjust (temp=" + std::to_string(temperature) +
-                     ", rate=" + std::to_string(static_cast<int>(recent_rate * 100)) +
-                     "%), reduced K: " + std::to_string(current_K) + " -> " + std::to_string(new_K));
-        }
-    } else if (recent_rate > adjusted_target + 0.15f) {
-        // 接受率明显高于目标
-        stats_.consecutive_high_accept.fetch_add(1, std::memory_order_relaxed);
-        stats_.consecutive_low_accept.store(0, std::memory_order_relaxed);
-
-        if (stats_.consecutive_high_accept.load() >= 2 && current_K < config_.max_K) {
-            int new_K = std::min(config_.max_K, current_K + 1);
-            stats_.current_K.store(new_K, std::memory_order_relaxed);
-            stats_.consecutive_high_accept.store(0, std::memory_order_relaxed);
-            LOG_INFO("Smart adjust (temp=" + std::to_string(temperature) +
-                     ", rate=" + std::to_string(static_cast<int>(recent_rate * 100)) +
-                     "%), increased K: " + std::to_string(current_K) + " -> " + std::to_string(new_K));
-        }
+    // 更新当前 draft 数量到统计
+    {
+        std::lock_guard<std::mutex> stats_g(stats_mutex_);
+        stats_.n_draft_current = config_.n_draft;
     }
 }
 
-// ============================================================
-// Early Stopping机制 (算法优化核心)
-// ============================================================
-bool SpeculativeDecoder::shouldFallbackToGreedy() const {
-    uint64_t steps = stats_.total_steps.load(std::memory_order_relaxed);
-
-    // 至少运行10步后才判断
-    if (steps < 10) {
-        return false;
+bool SpeculativeDecoder::shouldFallbackDueToTemperature(float temperature) const {
+    if (!config_.enable_temperature_aware) {
+        return false;  // 未启用温度感知，不回退
     }
 
-    // 条件1: 如果近期接受率持续极低 (<15%),不如直接用贪婪解码
-    float recent_rate = stats_.getRecentAcceptanceRate();
-    if (recent_rate < 0.15f) {
-        LOG_WARN("Early stopping triggered: acceptance rate too low (" +
-                 std::to_string(static_cast<int>(recent_rate * 100)) + "%)");
-        return true;
-    }
-
-    // 条件2: 如果实际加速比 < 1.0x (反而变慢),立即切换
-    float speedup = stats_.getSpeedup();
-    if (speedup < 1.0f) {
-        LOG_WARN("Early stopping triggered: negative speedup (" + std::to_string(speedup) + "x)");
-        return true;
-    }
-
-    // 条件3: 如果draft时间远超verify时间 (>5x),说明drafter太慢
-    double avg_draft = stats_.getAvgDraftTimeMs();
-    double avg_verify = stats_.getAvgVerifyTimeMs();
-    if (avg_verify > 0 && avg_draft / avg_verify > 5.0) {
-        LOG_WARN("Early stopping triggered: draft too slow (draft/verify ratio: " +
-                 std::to_string(avg_draft / avg_verify) + ")");
+    // 检查温度是否超过阈值
+    if (temperature > config_.temperature_threshold) {
+        if (config_.verbose) {
+            std::cerr << "[Adaptive] Temperature " << temperature
+                      << " exceeds threshold " << config_.temperature_threshold
+                      << ", fallback to normal inference recommended\n";
+        }
         return true;
     }
 
     return false;
 }
 
-// ============================================================
-// 统计信息
-// ============================================================
-
-std::string SpeculativeDecoder::getStatsString() const {
-    std::ostringstream oss;
-    oss << "\n=== Speculative Decoding Statistics ===\n";
-    oss << "Total steps:        " << stats_.total_steps.load() << "\n";
-    oss << "Total drafted:      " << stats_.total_drafted.load() << " tokens\n";
-    oss << "Total accepted:     " << stats_.total_accepted.load() << " tokens\n";
-    oss << "Acceptance rate:    " << (stats_.getAcceptanceRate() * 100) << "%\n";
-    oss << "Speedup:            " << stats_.getSpeedup() << "x\n";
-    oss << "Avg draft time:     " << stats_.getAvgDraftTimeMs() << " ms\n";
-    oss << "Avg verify time:    " << stats_.getAvgVerifyTimeMs() << " ms\n";
-    oss << "Current K:          " << stats_.current_K.load() << "\n";
-    oss << "========================================\n";
-    return oss.str();
-}
-
-void SpeculativeDecoder::updateConfig(const SpeculativeConfig& new_config) {
-    // 只允许更新部分运行时参数
-    config_.draft_tokens_K = new_config.draft_tokens_K;
-    config_.rejection_threshold = new_config.rejection_threshold;
-    config_.enable_dynamic_K = new_config.enable_dynamic_K;
-    config_.target_acceptance_rate = new_config.target_acceptance_rate;
-
-    stats_.current_K.store(new_config.draft_tokens_K, std::memory_order_relaxed);
-
-    LOG_INFO("Config updated: K=" + std::to_string(new_config.draft_tokens_K) +
-                 ", dynamic_K=" + (new_config.enable_dynamic_K ? "true" : "false"));
+void SpeculativeDecoder::recordTemperatureFallback() const {
+    std::lock_guard<std::mutex> g(stats_mutex_);
+    stats_.n_temperature_fallback++;
 }

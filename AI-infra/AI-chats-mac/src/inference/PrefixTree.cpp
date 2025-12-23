@@ -2,7 +2,7 @@
 #include <iostream>
 
 // ============================================================
-// 查找最长匹配前缀
+// 查找最长匹配前缀 (改进版：支持部分匹配 + 最小长度阈值)
 // ============================================================
 std::pair<int, int> PrefixTree::findLongestPrefix(const std::vector<int>& tokens) {
     auto node = root_;
@@ -16,6 +16,12 @@ std::pair<int, int> PrefixTree::findLongestPrefix(const std::vector<int>& tokens
 
         // 如果当前token无法继续匹配，停止
         if (node->children.find(token) == node->children.end()) {
+            // 调试日志：匹配中断
+            if (matched_len > 0 && matched_len < MIN_USEFUL_PREFIX_LEN) {
+                std::cerr << "[PrefixTree] Path matched " << matched_len
+                          << " tokens but stopped (< MIN_USEFUL_PREFIX_LEN="
+                          << MIN_USEFUL_PREFIX_LEN << ")\n";
+            }
             break;
         }
 
@@ -23,12 +29,18 @@ std::pair<int, int> PrefixTree::findLongestPrefix(const std::vector<int>& tokens
         node = node->children[token];
         matched_len++;
 
-        // 如果当前节点是缓存终点，记录为候选结果
-        if (node->is_cached()) {
+        // 如果当前节点是缓存终点，且长度满足最小阈值，记录为候选结果
+        if (node->is_cached() && matched_len >= static_cast<int>(MIN_USEFUL_PREFIX_LEN)) {
             best_seq_id = node->seq_id;
             best_len = matched_len;
             // 继续匹配，寻找更长的前缀
         }
+    }
+
+    // 调试日志：显示匹配结果
+    if (best_seq_id >= 0 && best_len < matched_len) {
+        std::cerr << "[PrefixTree] Partial match: found cached endpoint at "
+                  << best_len << " tokens (total path: " << matched_len << " tokens)\n";
     }
 
     return {best_seq_id, best_len};
@@ -84,25 +96,33 @@ void PrefixTree::updateHit(const std::vector<int>& tokens) {
 // ============================================================
 // LRU淘汰
 // ============================================================
-void PrefixTree::evictLRU(size_t max_entries) {
+std::vector<int> PrefixTree::evictLRU(size_t max_entries) {
+    std::vector<int> evicted_seq_ids;
+
     while (entry_count_ > max_entries) {
         auto [oldest_node, oldest_time] = findOldestLeaf(root_.get());
 
         if (oldest_node && oldest_node->is_cached()) {
+            // 记录被淘汰的 seq_id
+            int evicted_seq_id = oldest_node->seq_id;
+            evicted_seq_ids.push_back(evicted_seq_id);
+
             // 标记为非缓存节点（不删除树结构，只清除缓存信息）
             oldest_node->seq_id = -1;
             oldest_node->kv_length = 0;
             oldest_node->hit_count = 0;
             entry_count_--;
 
-            std::cout << "🗑️  Evicted LRU cache (age="
-                      << (TrieNode::getCurrentTimeNs() - oldest_time) / 1000000 << "ms)"
+            std::cout << "🗑️  Evicted LRU cache seq_id=" << evicted_seq_id
+                      << " (age=" << (TrieNode::getCurrentTimeNs() - oldest_time) / 1000000 << "ms)"
                       << std::endl;
         } else {
             // 无法继续淘汰
             break;
         }
     }
+
+    return evicted_seq_ids;
 }
 
 // ============================================================

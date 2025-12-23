@@ -1,20 +1,15 @@
 #include "ModelManager.h"
+#include "SpeculativeDecoder.h"
 #include "llama.h"
 #include <iostream>
 #include <cstring>
 #include <algorithm>
 
-// 简化的日志宏
-#define LOG_INFO(msg) std::cerr << "[INFO] " << msg << std::endl
-#define LOG_WARN(msg) std::cerr << "[WARN] " << msg << std::endl
-#define LOG_ERROR(msg) std::cerr << "[ERROR] " << msg << std::endl
-#define LOG_DEBUG(msg) std::cerr << "[DEBUG] " << msg << std::endl
-
 // ---------- ctor / dtor ----------
 ModelManager::ModelManager()  = default;
 ModelManager::~ModelManager() {
     if (ctx_) llama_free(ctx_);
-    if (model_) llama_free_model(model_);
+    if (model_) llama_model_free(model_);
 }
 
 // ---------- singleton ----------
@@ -33,13 +28,13 @@ bool ModelManager::loadModel(const std::string& path, int n_ctx, int n_threads) 
         ctx_ = nullptr;
     }
     if (model_) {
-        llama_free_model(model_);
+        llama_model_free(model_);
         model_ = nullptr;
     }
 
     // 加载新模型
     llama_model_params mp = llama_model_default_params();
-    model_ = llama_load_model_from_file(path.c_str(), mp);
+    model_ = llama_model_load_from_file(path.c_str(), mp);
     if (!model_) {
         std::cerr << "[Model] load failed: " << path << '\n';
         return false;
@@ -51,11 +46,11 @@ bool ModelManager::loadModel(const std::string& path, int n_ctx, int n_threads) 
     llama_context_params cp = llama_context_default_params();
     cp.n_ctx = n_ctx_;
     cp.n_threads = n_threads_;
-    ctx_ = llama_new_context_with_model(model_, cp);
+    ctx_ = llama_init_from_model(model_, cp);
 
     if (!ctx_) {
         std::cerr << "[Model] context creation failed\n";
-        llama_free_model(model_);
+        llama_model_free(model_);
         model_ = nullptr;
         return false;
     }
@@ -65,36 +60,19 @@ bool ModelManager::loadModel(const std::string& path, int n_ctx, int n_threads) 
 }
 
 // =========== 单轮推理（底层，无历史） ===========
-std::string ModelManager::raw_infer(const std::string& prompt, int maxTokens, float temperature, int prefix_kv_len, bool use_speculative) const {
+std::string ModelManager::raw_infer(const std::string& prompt, int maxTokens, float temperature, int prefix_kv_len) const {
     // 打印 prompt 长度
     std::cerr << "[run] prompt bytes=" << prompt.size() << "  maxTok=" << maxTokens << "  prefix_kv=" << prefix_kv_len << '\n';
 
     // 0. 使用持久的 context
     if (!ctx_) return "[no_ctx]";
 
-    // ======== 推测式解码路径 ========
-    // 条件: 1) 已启用 2) 用户未禁用 3) 生成长度足够
-    bool should_use_spec = false;
-    {
-        std::lock_guard<std::mutex> lock(spec_mutex_);
-        should_use_spec = use_speculative &&
-                          speculative_decoder_ &&
-                          speculative_decoder_->isLoaded() &&
-                          speculative_decoder_->shouldEnableForTask(maxTokens);
-    }
-
-    if (should_use_spec) {
-        std::cerr << "[run] 🚀 Using SPECULATIVE DECODING\n";
-        return raw_infer_speculative(prompt, maxTokens, temperature, prefix_kv_len);
-    } else {
-        std::cerr << "[run] Using GREEDY DECODING\n";
-    }
-
-    // ======== 原有贪婪解码路径 ========
-
     // 如果没有前缀缓存，清空 KV cache；否则保留前缀部分
     if (prefix_kv_len == 0) {
-        llama_kv_cache_clear(ctx_);
+        // 使用新的 memory API 清空 KV cache
+        llama_memory_t mem = llama_get_memory(ctx_);
+        llama_memory_clear(mem, true);  // 清空数据和元数据
+        std::cerr << "[run] KV cache cleared using new memory API\n";
     }
 
     const llama_vocab* vocab = llama_model_get_vocab(model_);
@@ -341,29 +319,38 @@ int ModelManager::findPrefixCache(const std::string& prefix) {
     std::lock_guard<std::mutex> g(cache_mutex_);
     total_cache_requests_++;
 
-    // Tokenize前缀
     auto tokens = tokenize(prefix);
     if (tokens.empty()) {
         std::cerr << "[PrefixTree] Tokenize failed\n";
         return 0;
     }
 
-    // 使用Prefix Tree查找最长匹配
     auto [seq_id, matched_len] = prefix_tree_.findLongestPrefix(tokens);
 
     if (seq_id >= 0 && matched_len > 0) {
-        // 命中！复制KV到seq_id=0（当前推理序列）
-        std::cerr << "[PrefixTree] ✓ HIT! "
+        // 判断是完全匹配还是部分匹配
+        bool is_partial = (matched_len < static_cast<int>(tokens.size()));
+
+        std::cerr << "[PrefixTree] ✓ " << (is_partial ? "PARTIAL HIT" : "FULL HIT") << "! "
                   << "seq_id=" << seq_id
-                  << " matched_tokens=" << matched_len << "/" << tokens.size()
-                  << " (cache_size=" << prefix_tree_.size() << ")\n";
+                  << " matched_tokens=" << matched_len << "/" << tokens.size();
 
-        // 使用llama.cpp的seq复制功能
-        llama_kv_cache_seq_rm(ctx_, 0, 0, -1);  // 清空seq_id=0
-        llama_kv_cache_seq_cp(ctx_, seq_id, 0, 0, matched_len);
+        if (is_partial) {
+            std::cerr << " (saved " << (tokens.size() - matched_len)
+                      << " tokens, " << (100.0 * matched_len / tokens.size()) << "%)";
+        }
+        std::cerr << " (cache_size=" << prefix_tree_.size() << ")\n";
 
-        // 更新统计
-        prefix_tree_.updateHit(tokens);
+        // 使用新的 memory API 复制序列
+        if (ctx_) {
+            llama_memory_t mem = llama_get_memory(ctx_);
+            llama_memory_seq_rm(mem, 0, -1, -1);  // 清空序列 0
+            llama_memory_seq_cp(mem, seq_id, 0, 0, matched_len);  // 复制到序列 0
+        }
+
+        // 只更新匹配部分的统计信息
+        std::vector<int> matched_tokens(tokens.begin(), tokens.begin() + matched_len);
+        prefix_tree_.updateHit(matched_tokens);
         total_cache_hits_++;
 
         double hit_rate = (double)total_cache_hits_ / total_cache_requests_ * 100.0;
@@ -382,25 +369,35 @@ int ModelManager::findPrefixCache(const std::string& prefix) {
 void ModelManager::savePrefixCache(const std::string& prefix, int kv_length) {
     std::lock_guard<std::mutex> g(cache_mutex_);
 
-    // Tokenize前缀
     auto tokens = tokenize(prefix);
     if (tokens.empty()) {
         std::cerr << "[PrefixTree] Tokenize failed, cannot save\n";
         return;
     }
 
-    // 检查是否需要淘汰
+    // LRU 淘汰：如果缓存已满，清理最旧的条目
     if (prefix_tree_.size() >= MAX_PREFIX_CACHE) {
-        prefix_tree_.evictLRU(MAX_PREFIX_CACHE);
+        auto evicted_seq_ids = prefix_tree_.evictLRU(MAX_PREFIX_CACHE);
+
+        // 清理对应的 llama.cpp 序列，并回收 seq_id
+        if (ctx_ && !evicted_seq_ids.empty()) {
+            llama_memory_t mem = llama_get_memory(ctx_);
+            for (int sid : evicted_seq_ids) {
+                llama_memory_seq_rm(mem, sid, -1, -1);
+                releaseSeqId(sid);  // 回收 seq_id
+                std::cerr << "[PrefixTree] Cleared and recycled seq_id=" << sid << "\n";
+            }
+        }
     }
 
-    // 分配新序列ID
-    int seq_id = next_seq_id_++;
+    int seq_id = allocateSeqId();  // 使用回收池分配 seq_id
 
-    // 复制当前KV cache（seq_id=0）到新序列
-    llama_kv_cache_seq_cp(ctx_, 0, seq_id, 0, kv_length);
+    // 使用新的 memory API 复制序列
+    if (ctx_) {
+        llama_memory_t mem = llama_get_memory(ctx_);
+        llama_memory_seq_cp(mem, 0, seq_id, 0, kv_length);
+    }
 
-    // 插入Prefix Tree
     prefix_tree_.insert(tokens, seq_id);
 
     std::cerr << "[PrefixTree] SAVED " << tokens.size() << " tokens"
@@ -428,10 +425,12 @@ ModelManager::CacheStats ModelManager::getCacheStats() const {
 void ModelManager::clearPrefixCache() {
     std::lock_guard<std::mutex> g(cache_mutex_);
 
-    // 注意：这里我们无法遍历Prefix Tree获取所有seq_id
-    // 简化处理：清空整个KV cache（seq_id 1到next_seq_id_）
-    for (int sid = 1; sid < next_seq_id_; sid++) {
-        llama_kv_cache_seq_rm(ctx_, sid, 0, -1);
+    // 使用新的 memory API 清空所有序列
+    if (ctx_) {
+        llama_memory_t mem = llama_get_memory(ctx_);
+        for (int sid = 1; sid < next_seq_id_; sid++) {
+            llama_memory_seq_rm(mem, sid, -1, -1);  // 删除整个序列
+        }
     }
 
     prefix_tree_.clear();
@@ -439,7 +438,7 @@ void ModelManager::clearPrefixCache() {
     total_cache_hits_ = 0;
     total_cache_requests_ = 0;
 
-    std::cerr << "[PrefixTree] CLEARED all caches\n";
+    std::cerr << "[PrefixTree] CLEARED all caches using new memory API\n";
 }
 
 // 预热缓存：预先计算常用模板
@@ -467,16 +466,20 @@ void ModelManager::warmupCache(const std::vector<std::string>& prompts) {
 
         std::cout << "  🔢 Tokens: " << tokens.size() << std::endl;
 
-        // 2. 计算KV cache（仅一次前向传播）
-        llama_kv_cache_seq_rm(ctx_, 0, 0, -1);  // 清空seq_id=0
+        // 2. 清空序列0的KV cache
+        if (ctx_) {
+            llama_memory_t mem = llama_get_memory(ctx_);
+            llama_memory_clear(mem, true);
+        }
 
+        // 3. 计算KV cache（一次前向传播）
         llama_batch batch = llama_batch_init(tokens.size(), 0, 1);
         for (size_t j = 0; j < tokens.size(); j++) {
             batch.token[j]     = tokens[j];
             batch.pos[j]       = j;
-            batch.seq_id[j][0] = 0;
+            batch.seq_id[j][0] = 0;  // 直接赋值，不要 new（llama_batch_init 已分配内存）
             batch.n_seq_id[j]  = 1;
-            batch.logits[j]    = (j == tokens.size() - 1);  // 只有最后一个token需要logits
+            batch.logits[j]    = (j == tokens.size() - 1);
         }
         batch.n_tokens = tokens.size();
 
@@ -485,244 +488,18 @@ void ModelManager::warmupCache(const std::vector<std::string>& prompts) {
             llama_batch_free(batch);
             continue;
         }
+
         llama_batch_free(batch);
 
-        // 3. 保存到缓存（复用savePrefixCache逻辑）
-        {
-            std::lock_guard<std::mutex> cache_lock(cache_mutex_);
+        // 4. 使用savePrefixCache()保存到缓存
+        savePrefixCache(prompt, tokens.size());
 
-            // 检查是否需要淘汰
-            if (prefix_tree_.size() >= MAX_PREFIX_CACHE) {
-                prefix_tree_.evictLRU(MAX_PREFIX_CACHE);
-            }
-
-            // 分配新序列ID
-            int seq_id = next_seq_id_++;
-
-            // 复制当前KV cache（seq_id=0）到新序列
-            llama_kv_cache_seq_cp(ctx_, 0, seq_id, 0, tokens.size());
-
-            // 插入Prefix Tree
-            prefix_tree_.insert(tokens, seq_id);
-
-            std::cout << "  ✅ Cached: seq_id=" << seq_id
-                      << " tokens=" << tokens.size() << std::endl;
-            success_count++;
-        }
+        std::cout << "  ✅ Cached: tokens=" << tokens.size() << std::endl;
+        success_count++;
     }
 
     std::cout << "\n🔥 ========== Cache Warmup Complete ==========" << std::endl;
     std::cout << "✅ Successfully cached: " << success_count << "/" << prompts.size() << " templates" << std::endl;
     std::cout << "📊 Total cache entries: " << prefix_tree_.size() << std::endl;
     std::cout << "🔥 ============================================\n" << std::endl;
-}
-
-// ============================================================
-// 推测式解码集成
-// ============================================================
-
-bool ModelManager::enableSpeculativeDecoding(
-    const std::string& draft_model_path,
-    const SpeculativeConfig* config
-) {
-    std::lock_guard<std::mutex> lock(spec_mutex_);
-
-    if (speculative_decoder_) {
-        LOG_WARN("Speculative decoding already enabled, disabling first...");
-        speculative_decoder_.reset();
-    }
-
-    if (!model_) {
-        LOG_ERROR("Verifier model not loaded, cannot enable speculative decoding");
-        return false;
-    }
-
-    // 使用提供的配置或默认配置
-    SpeculativeConfig cfg;
-    if (config) {
-        cfg = *config;
-    } else {
-        // 自动检测平台并使用最佳配置
-        #ifdef __APPLE__
-            cfg = SpeculativeConfig::createForAppleSilicon();
-            LOG_INFO("Using Apple Silicon optimized config");
-        #else
-            cfg = SpeculativeConfig::createForCPUOnly();
-            LOG_INFO("Using CPU-only config");
-        #endif
-    }
-
-    cfg.draft_model_path = draft_model_path;
-
-    // 创建SpeculativeDecoder实例
-    speculative_decoder_ = std::make_unique<SpeculativeDecoder>(cfg);
-
-    // 加载draft模型
-    if (!speculative_decoder_->loadDraftModel()) {
-        LOG_ERROR("Failed to load draft model");
-        speculative_decoder_.reset();
-        return false;
-    }
-
-    // 运行兼容性检查
-    auto compat_result = speculative_decoder_->checkCompatibility(model_);
-    if (!compat_result.is_compatible) {
-        LOG_ERROR("Draft/Verifier compatibility check failed!");
-        LOG_ERROR(compat_result.error_message);
-        LOG_ERROR(compat_result.getSummary());
-        speculative_decoder_.reset();
-        return false;
-    }
-
-    LOG_INFO("✓ Speculative decoding enabled successfully");
-    LOG_INFO(compat_result.getSummary());
-
-    return true;
-}
-
-void ModelManager::disableSpeculativeDecoding() {
-    std::lock_guard<std::mutex> lock(spec_mutex_);
-
-    if (!speculative_decoder_) {
-        LOG_WARN("Speculative decoding not enabled");
-        return;
-    }
-
-    LOG_INFO("Disabling speculative decoding...");
-    LOG_INFO(speculative_decoder_->getStatsString());
-
-    speculative_decoder_.reset();
-    LOG_INFO("Speculative decoding disabled");
-}
-
-bool ModelManager::isSpeculativeDecodingEnabled() const {
-    std::lock_guard<std::mutex> lock(spec_mutex_);
-    return speculative_decoder_ && speculative_decoder_->isLoaded();
-}
-
-std::string ModelManager::getSpeculativeStats() const {
-    std::lock_guard<std::mutex> lock(spec_mutex_);
-
-    if (!speculative_decoder_) {
-        return "Speculative decoding not enabled";
-    }
-
-    return speculative_decoder_->getStatsString();
-}
-
-std::string ModelManager::checkSpeculativeCompatibility() const {
-    std::lock_guard<std::mutex> lock(spec_mutex_);
-
-    if (!speculative_decoder_) {
-        return "Speculative decoder not initialized";
-    }
-
-    if (!model_) {
-        return "Verifier model not loaded";
-    }
-
-    auto result = speculative_decoder_->checkCompatibility(model_);
-    return result.getSummary();
-}
-
-// ============================================================
-// 推测式解码推理路径
-// ============================================================
-
-std::string ModelManager::raw_infer_speculative(
-    const std::string& prompt,
-    int maxTokens,
-    float temperature,
-    int prefix_kv_len
-) const {
-    std::cerr << "[spec] Starting speculative decoding...\n";
-
-    if (!ctx_) return "[no_ctx]";
-
-    // ======== 阶段1: Tokenize prompt ========
-    if (prefix_kv_len == 0) {
-        llama_kv_cache_clear(ctx_);
-    }
-
-    const llama_vocab* vocab = llama_model_get_vocab(model_);
-
-    std::vector<llama_token> tokBuf(prompt.size() * 4);
-    int nTok = llama_tokenize(
-        vocab, prompt.c_str(), (int)prompt.size(),
-        tokBuf.data(), (int)tokBuf.size(),
-        true, false
-    );
-
-    if (nTok < 1) { return "[tok_fail]"; }
-    tokBuf.resize(nTok);
-
-    // 转换为std::vector<int>
-    std::vector<int> prompt_tokens(tokBuf.begin(), tokBuf.end());
-
-    std::cerr << "[spec] Prompt tokenized: " << nTok << " tokens\n";
-
-    // ======== 阶段2: 处理prompt (跳过缓存的部分) ========
-    int start_idx = (prefix_kv_len > 0 && prefix_kv_len < nTok) ? prefix_kv_len : 0;
-    int tokens_to_process = nTok - start_idx;
-
-    if (tokens_to_process > 0) {
-        std::cerr << "[spec] Processing prompt tokens [" << start_idx << ", " << nTok << ")\n";
-
-        llama_batch full = llama_batch_init(tokens_to_process, 0, 1);
-        for (int i = 0; i < tokens_to_process; ++i) {
-            int tok_idx = start_idx + i;
-            full.token[i]     = tokBuf[tok_idx];
-            full.pos[i]       = tok_idx;
-            full.seq_id[i][0] = 0;
-            full.n_seq_id[i]  = 1;
-            full.logits[i]    = (i == tokens_to_process - 1);
-        }
-        full.n_tokens = tokens_to_process;
-
-        if (llama_decode(ctx_, full) != 0) {
-            llama_batch_free(full);
-            return "[decode_prompt_fail]";
-        }
-        llama_batch_free(full);
-    }
-
-    // ======== 阶段3: 推测式解码生成 ========
-    const int eos = llama_vocab_eos(vocab);
-
-    std::vector<int> generated_tokens;
-    {
-        std::lock_guard<std::mutex> lock(spec_mutex_);
-        generated_tokens = speculative_decoder_->decode(
-            ctx_,
-            prompt_tokens,
-            maxTokens,
-            temperature,
-            eos
-        );
-    }
-
-    // ======== 阶段4: 将tokens转换为文本 ========
-    std::string output;
-    output.reserve(generated_tokens.size() * 4);
-
-    for (int token : generated_tokens) {
-        char piece[256] = {0};
-        llama_token_to_piece(vocab, token, piece, sizeof(piece), 0, false);
-
-        // 停止条件检查
-        if (piece[0] == '<') break;
-
-        output += piece;
-    }
-
-    std::cerr << "[spec] Generated " << generated_tokens.size() << " tokens, "
-              << output.size() << " bytes\n";
-
-    // 打印统计信息
-    {
-        std::lock_guard<std::mutex> lock(spec_mutex_);
-        std::cerr << speculative_decoder_->getStatsString();
-    }
-
-    return output;
 }

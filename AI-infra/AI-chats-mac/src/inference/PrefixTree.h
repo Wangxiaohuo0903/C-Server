@@ -48,6 +48,10 @@ struct TrieNode {
 // Prefix Tree 前缀缓存管理器
 class PrefixTree {
 public:
+    // 最小有效前缀长度（tokens）
+    // 小于此长度的匹配将被忽略，避免过短的前缀缓存收益不明显
+    static constexpr size_t MIN_USEFUL_PREFIX_LEN = 8;
+
     PrefixTree() : root_(std::make_shared<TrieNode>()), entry_count_(0) {}
 
     // ============================================================
@@ -72,7 +76,8 @@ public:
 
     // LRU淘汰：删除最久未使用的缓存条目
     // @param max_entries: 最大缓存条目数
-    void evictLRU(size_t max_entries);
+    // @return: 被淘汰的 seq_id 列表
+    std::vector<int> evictLRU(size_t max_entries);
 
     // 清空所有缓存
     void clear() {

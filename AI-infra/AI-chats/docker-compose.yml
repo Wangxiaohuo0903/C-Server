@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  ai-chats:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-chats-server
+    ports:
+      - "8080:8080"
+    volumes:
+      # 挂载模型目录（请修改为实际的模型路径）
+      - ../models:/app/models:ro
+      # 挂载数据库（持久化用户数据）
+      - ./users.db:/app/users.db
+    environment:
+      - MODEL_PATH=/app/models/tinyllama-q4.gguf
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - ai-network
+
+networks:
+  ai-network:
+    driver: bridge

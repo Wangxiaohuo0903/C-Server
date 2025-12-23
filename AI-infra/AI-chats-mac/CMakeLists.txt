@@ -97,53 +97,122 @@ if (WITH_METAL AND APPLE)
 endif()
 
 # ───────────────────────────────────────────────────────────
-# 9. 测试程序：推测式解码功能测试
+# 9. 测试程序
 # ───────────────────────────────────────────────────────────
-# 收集测试程序需要的源文件（排除main.cpp）
-file(GLOB_RECURSE TEST_SRCS "${PROJECT_SOURCE_DIR}/src/*.cpp")
-list(FILTER TEST_SRCS EXCLUDE REGEX ".*main\\.cpp$")
 
-# 添加测试可执行文件
-add_executable(test_speculative
-    test_speculative.cpp
-    ${TEST_SRCS}
+# 任务感知测试程序
+add_executable(test_task_aware
+    test_task_aware.cpp
+    src/inference/SpeculativeDecoder.cpp
+    src/inference/TaskClassifier.cpp
+    src/inference/ConfidenceGuide.cpp
 )
-
-# 链接依赖库
-target_link_libraries(test_speculative
+target_link_libraries(test_task_aware
     PRIVATE
         llama
         Threads::Threads
-        sqlite3
 )
+
+# 自适应推测式解码测试程序
+if(EXISTS "${PROJECT_SOURCE_DIR}/test_adaptive_speculative.cpp")
+    add_executable(test_adaptive_speculative
+        test_adaptive_speculative.cpp
+        src/inference/SpeculativeDecoder.cpp
+        src/inference/TaskClassifier.cpp
+    )
+    target_link_libraries(test_adaptive_speculative
+        PRIVATE
+            llama
+            Threads::Threads
+    )
+endif()
+
+# 置信度引导测试程序
+if(EXISTS "${PROJECT_SOURCE_DIR}/test_confidence_guide.cpp")
+    add_executable(test_confidence_guide
+        test_confidence_guide.cpp
+        src/inference/ConfidenceGuide.cpp
+    )
+    target_link_libraries(test_confidence_guide
+        PRIVATE
+            llama
+            Threads::Threads
+    )
+endif()
+
+# 分类器测试程序
+if(EXISTS "${PROJECT_SOURCE_DIR}/test_classifier_only.cpp")
+    add_executable(test_classifier_only
+        test_classifier_only.cpp
+        src/inference/TaskClassifier.cpp
+    )
+    target_link_libraries(test_classifier_only
+        PRIVATE
+            llama
+            Threads::Threads
+    )
+endif()
+
+# 推测式解码测试程序
+if(EXISTS "${PROJECT_SOURCE_DIR}/test_speculative.cpp")
+    # 收集测试程序需要的源文件（排除main.cpp）
+    file(GLOB_RECURSE TEST_SRCS "${PROJECT_SOURCE_DIR}/src/*.cpp")
+    list(FILTER TEST_SRCS EXCLUDE REGEX ".*main\\.cpp$")
+
+    add_executable(test_speculative
+        test_speculative.cpp
+        ${TEST_SRCS}
+    )
+
+    target_link_libraries(test_speculative
+        PRIVATE
+            llama
+            Threads::Threads
+            sqlite3
+    )
+
+    # Mac Metal 支持
+    if (WITH_METAL AND APPLE)
+        if (METAL_FRAMEWORK AND FOUNDATION_FRAMEWORK)
+            target_link_libraries(test_speculative PRIVATE
+                ${METAL_FRAMEWORK}
+                ${FOUNDATION_FRAMEWORK}
+            )
+            if (METALKIT_FRAMEWORK)
+                target_link_libraries(test_speculative PRIVATE ${METALKIT_FRAMEWORK})
+            endif()
+        endif()
+    endif()
+endif()
 
 # K值优化测试
-add_executable(test_k_optimization
-    test_k_optimization.cpp
-    ${TEST_SRCS}
-)
+if(EXISTS "${PROJECT_SOURCE_DIR}/test_k_optimization.cpp")
+    # 收集测试程序需要的源文件（排除main.cpp）
+    file(GLOB_RECURSE TEST_SRCS_K "${PROJECT_SOURCE_DIR}/src/*.cpp")
+    list(FILTER TEST_SRCS_K EXCLUDE REGEX ".*main\\.cpp$")
 
-target_link_libraries(test_k_optimization
-    PRIVATE
-        llama
-        Threads::Threads
-        sqlite3
-)
+    add_executable(test_k_optimization
+        test_k_optimization.cpp
+        ${TEST_SRCS_K}
+    )
 
-# Mac Metal 支持
-if (WITH_METAL AND APPLE)
-    if (METAL_FRAMEWORK AND FOUNDATION_FRAMEWORK)
-        target_link_libraries(test_speculative PRIVATE
-            ${METAL_FRAMEWORK}
-            ${FOUNDATION_FRAMEWORK}
-        )
-        target_link_libraries(test_k_optimization PRIVATE
-            ${METAL_FRAMEWORK}
-            ${FOUNDATION_FRAMEWORK}
-        )
-        if (METALKIT_FRAMEWORK)
-            target_link_libraries(test_speculative PRIVATE ${METALKIT_FRAMEWORK})
-            target_link_libraries(test_k_optimization PRIVATE ${METALKIT_FRAMEWORK})
+    target_link_libraries(test_k_optimization
+        PRIVATE
+            llama
+            Threads::Threads
+            sqlite3
+    )
+
+    # Mac Metal 支持
+    if (WITH_METAL AND APPLE)
+        if (METAL_FRAMEWORK AND FOUNDATION_FRAMEWORK)
+            target_link_libraries(test_k_optimization PRIVATE
+                ${METAL_FRAMEWORK}
+                ${FOUNDATION_FRAMEWORK}
+            )
+            if (METALKIT_FRAMEWORK)
+                target_link_libraries(test_k_optimization PRIVATE ${METALKIT_FRAMEWORK})
+            endif()
         endif()
     endif()
 endif()

@@ -161,22 +161,55 @@ inline void Router::setupChatRoutes(Database& db, ModelManager& mm) {
             if (js.empty()) {
                 return HttpResponse::makeErrorResponse(400, "json parse fail");
             }
-            int cid              = std::stoi(js["chat_id"]);
+
+            // 支持字符串形式的chat_id
+            std::string chatId = js["chat_id"];
+            if (chatId.empty()) chatId = "default";
+
             std::string user     = js["user"];
             std::string prompt   = js["prompt"];
             if (prompt.empty()) {
                 return HttpResponse::makeErrorResponse(400, "no prompt");
             }
-            // 存储用户提问
-            db.addMessage(cid, "user", prompt);
+
+            // 解析max_tokens和temperature（带默认值）
+            int maxTokens = 64;
+            float temperature = 0.7f;
+            if (!js["max_tokens"].empty()) {
+                try {
+                    maxTokens = std::stoi(js["max_tokens"]);
+                } catch (...) { }
+            }
+            if (!js["temperature"].empty()) {
+                try {
+                    temperature = std::stof(js["temperature"]);
+                } catch (...) { }
+            }
+
+            // 存储用户提问（仅当chat_id是数字时存入数据库）
+            try {
+                int cid = std::stoi(chatId);
+                db.addMessage(cid, "user", prompt);
+            } catch (...) {
+                // chat_id不是数字，跳过数据库存储
+            }
+
             // 调用模型生成回答
-            std::string ans = mm.infer(user + "-" + std::to_string(cid),
-                                       prompt, 64, 0.7f);
-            db.addMessage(cid, "assistant", ans);
-            // 返回 JSON 结果
+            std::string sessionKey = user.empty() ? chatId : (user + "-" + chatId);
+            std::string ans = mm.infer(sessionKey, prompt, maxTokens, temperature);
+
+            // 存储助手回复（仅当chat_id是数字时）
+            try {
+                int cid = std::stoi(chatId);
+                db.addMessage(cid, "assistant", ans);
+            } catch (...) {
+                // chat_id不是数字，跳过数据库存储
+            }
+
+            // 返回 JSON 结果（统一使用"response"字段）
             HttpResponse resp(200);
             resp.setHeader("Content-Type", "application/json");
-            resp.setBody("{\"answer\":\"" + ans + "\"}");
+            resp.setBody("{\"response\":\"" + ans + "\"}");
             return resp;
         }
         catch (const std::exception& e) {

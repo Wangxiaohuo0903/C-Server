@@ -1,320 +1,413 @@
 #pragma once
 
+#include "llama.h"
 #include <string>
 #include <vector>
-#include <atomic>
+#include <memory>
 #include <mutex>
-#include <cstdint>
+#include <chrono>
+#include <deque>
+#include <numeric>
 
-// Forward declarations for llama.cpp types
-struct llama_model;
-struct llama_context;
-struct llama_batch;
+// Forward declarations
+class TaskClassifier;
+class ConfidenceGuidedStrategy;
+class ConfidenceAnalyzer;
 
-// ============================================================
-// 推测式解码配置
-// ============================================================
-struct SpeculativeConfig {
-    // 小模型路径 (drafter)
-    std::string draft_model_path;
-
-    // 推测式解码参数
-    int draft_tokens_K = 4;         // 每次起草的token数量 (论文推荐4-8)
-    bool enable_spec_decode = true; // 是否启用推测式解码
-
-    // Drafter模型配置
-    int draft_n_ctx = 512;          // 小模型上下文长度 (较短即可)
-    int draft_n_threads = 2;        // CPU推理线程数
-    int draft_n_gpu_layers = 0;     // GPU层数 (0=纯CPU, drafter通常用CPU)
-
-    // 校验参数
-    float rejection_threshold = 0.1; // 概率差异阈值 (越小越严格)
-    bool use_probability_matching = true; // 是否使用概率匹配校验
-
-    // 动态调整
-    bool enable_dynamic_K = false;   // 是否根据接受率动态调整K
-    int min_K = 2;                   // 动态K的下限
-    int max_K = 8;                   // 动态K的上限
-    float target_acceptance_rate = 0.65f; // 目标接受率
-
-    // 构造函数：提供默认配置
-    SpeculativeConfig() = default;
-
-    // 工厂方法：根据硬件平台创建配置
-    static SpeculativeConfig createForAppleSilicon() {
-        SpeculativeConfig cfg;
-        cfg.draft_n_threads = 4;        // Apple Silicon性能核心
-        cfg.draft_n_gpu_layers = 23;    // Drafter全部offload到GPU (10-20x加速!)
-        cfg.draft_tokens_K = 5;         // M1/M2/M3有强大Metal GPU
-        return cfg;
-    }
-
-    static SpeculativeConfig createForCPUOnly() {
-        SpeculativeConfig cfg;
-        cfg.draft_n_threads = 2;
-        cfg.draft_n_gpu_layers = 0;
-        cfg.draft_tokens_K = 3;         // 纯CPU场景保守起草
-        return cfg;
-    }
-};
-
-// ============================================================
-// 推测式解码统计信息
-// ============================================================
-struct SpeculativeStats {
-    // 基础统计
-    std::atomic<uint64_t> total_drafted{0};     // 总起草token数
-    std::atomic<uint64_t> total_accepted{0};    // 总接受token数
-    std::atomic<uint64_t> total_steps{0};       // 总解码步数
-
-    // 时间统计 (纳秒)
-    std::atomic<uint64_t> total_draft_time_ns{0};   // 起草阶段总耗时
-    std::atomic<uint64_t> total_verify_time_ns{0};  // 校验阶段总耗时
-
-    // 动态K值追踪
-    std::atomic<int> current_K{4};              // 当前K值
-    std::atomic<uint32_t> consecutive_low_accept{0}; // 连续低接受率次数
-    std::atomic<uint32_t> consecutive_high_accept{0}; // 连续高接受率次数
-
-    // 滑动窗口接受率追踪 (最近N步)
-    static constexpr size_t WINDOW_SIZE = 10;
-    std::array<float, WINDOW_SIZE> recent_acceptance_rates{0.0f};
-    std::atomic<size_t> window_index{0};
-    std::mutex window_mutex;  // 保护滑动窗口更新
-
-    // 计算接受率 (线程安全读取)
-    float getAcceptanceRate() const {
-        uint64_t drafted = total_drafted.load(std::memory_order_relaxed);
-        uint64_t accepted = total_accepted.load(std::memory_order_relaxed);
-        return drafted > 0 ? static_cast<float>(accepted) / drafted : 0.0f;
-    }
-
-    // 计算平均加速比 (相比贪婪解码)
-    float getSpeedup() const {
-        uint64_t steps = total_steps.load(std::memory_order_relaxed);
-        uint64_t accepted = total_accepted.load(std::memory_order_relaxed);
-        // 贪婪解码: steps步生成steps个token
-        // 推测式解码: steps步生成accepted个token
-        return steps > 0 ? static_cast<float>(accepted) / steps : 1.0f;
-    }
-
-    // 计算平均起草时间 (毫秒)
-    double getAvgDraftTimeMs() const {
-        uint64_t steps = total_steps.load(std::memory_order_relaxed);
-        uint64_t time_ns = total_draft_time_ns.load(std::memory_order_relaxed);
-        return steps > 0 ? (time_ns / 1e6) / steps : 0.0;
-    }
-
-    // 计算平均校验时间 (毫秒)
-    double getAvgVerifyTimeMs() const {
-        uint64_t steps = total_steps.load(std::memory_order_relaxed);
-        uint64_t time_ns = total_verify_time_ns.load(std::memory_order_relaxed);
-        return steps > 0 ? (time_ns / 1e6) / steps : 0.0;
-    }
-
-    // 更新滑动窗口接受率
-    void updateRecentAcceptanceRate(float step_acceptance_rate) {
-        std::lock_guard<std::mutex> lock(window_mutex);
-        size_t idx = window_index.fetch_add(1, std::memory_order_relaxed) % WINDOW_SIZE;
-        recent_acceptance_rates[idx] = step_acceptance_rate;
-    }
-
-    // 计算近期平均接受率 (滑动窗口)
-    float getRecentAcceptanceRate() const {
-        std::lock_guard<std::mutex> lock(const_cast<std::mutex&>(window_mutex));
-        size_t total_entries = std::min(window_index.load(std::memory_order_relaxed), WINDOW_SIZE);
-        if (total_entries == 0) return 0.0f;
-
-        float sum = 0.0f;
-        for (size_t i = 0; i < total_entries; ++i) {
-            sum += recent_acceptance_rates[i];
-        }
-        return sum / total_entries;
-    }
-
-    // 重置统计
-    void reset() {
-        total_drafted.store(0, std::memory_order_relaxed);
-        total_accepted.store(0, std::memory_order_relaxed);
-        total_steps.store(0, std::memory_order_relaxed);
-        total_draft_time_ns.store(0, std::memory_order_relaxed);
-        total_verify_time_ns.store(0, std::memory_order_relaxed);
-        consecutive_low_accept.store(0, std::memory_order_relaxed);
-        consecutive_high_accept.store(0, std::memory_order_relaxed);
-        window_index.store(0, std::memory_order_relaxed);
-
-        std::lock_guard<std::mutex> lock(const_cast<std::mutex&>(window_mutex));
-        recent_acceptance_rates.fill(0.0f);
-    }
-};
-
-// ============================================================
-// 推测式解码器核心类
-// ============================================================
+/**
+ * @brief 推测式解码器（Speculative Decoding）
+ *
+ * 核心原理：
+ * 1. 使用小模型（draft model）快速生成 N 个候选 tokens
+ * 2. 使用大模型（target model）并行验证这些 tokens
+ * 3. 接受正确的 tokens，拒绝错误的 tokens
+ * 4. 理论加速比：1.5x - 3.0x（取决于接受率）
+ *
+ * 使用示例：
+ * ```cpp
+ * SpeculativeDecoder decoder(model_tgt, ctx_tgt, "path/to/draft.gguf", config);
+ * std::string result = decoder.infer(prompt, 100, 0.7f);
+ * auto stats = decoder.getStats();
+ * std::cout << "Accept rate: " << stats.accept_rate << std::endl;
+ * std::cout << "Speedup: " << stats.speedup << "x" << std::endl;
+ * ```
+ */
 class SpeculativeDecoder {
 public:
-    // 构造函数：传入配置
-    explicit SpeculativeDecoder(const SpeculativeConfig& config);
+    // ============ 配置参数 ============
+    struct Config {
+        // Draft 生成参数
+        int n_draft = 16;           // 每次生成的 draft tokens 数量（推荐 8-32）
+        int n_draft_min = 5;        // 最小 draft 数量（低于此值跳过 draft）
+        float p_min = 0.3f;         // Draft 置信度阈值（低于此值停止 draft）
 
-    // 析构函数：清理资源
+        // Draft 模型参数
+        int n_ctx_draft = 2048;     // Draft 模型上下文长度
+        int n_threads_draft = 2;    // Draft 模型线程数（通常少于 target）
+        int n_gpu_layers_draft = 0; // Draft 模型 GPU 层数（0=纯CPU）
+
+        // 采样参数
+        float temperature = 0.7f;   // 温度参数
+        int top_k = 40;            // Top-K 采样
+        float top_p = 0.9f;        // Top-P (nucleus) 采样
+
+        // 性能优化
+        bool enable_kv_reuse = true; // 是否复用 KV cache
+        bool verbose = false;        // 是否打印详细日志
+
+        // ============ 自适应推测配置 ============
+        bool enable_adaptive = true;        // 是否启用自适应 draft 数量
+        int n_draft_max = 32;              // 最大 draft 数量
+        int n_draft_min_adaptive = 8;      // 最小 draft 数量（自适应模式）
+        float accept_rate_target = 0.55f;  // 目标接受率
+        float accept_rate_high = 0.65f;    // 高接受率阈值（超过则增加 draft）
+        float accept_rate_low = 0.45f;     // 低接受率阈值（低于则减少 draft）
+        int adjust_step = 2;               // 每次调整的步长
+        int window_size = 10;              // 滑动窗口大小（用于平滑接受率）
+
+        // 温度感知优化
+        bool enable_temperature_aware = true;  // 是否启用温度感知模式切换
+        float temperature_threshold = 0.9f;    // 温度阈值（超过则禁用推测式解码）
+
+        // ============ 任务感知优化 ============
+        bool enable_task_aware = true;         // 是否启用任务感知优化
+        bool task_aware_verbose = false;       // 是否打印任务分类详情
+
+        // ============ 置信度引导优化 ============
+        bool enable_confidence_guide = true;        // 是否启用置信度引导
+        float confidence_high_threshold = 0.85f;    // 高置信度阈值
+        float confidence_low_threshold = 0.65f;     // 低置信度阈值
+        int confidence_min_n_draft = 4;             // 置信度引导最小draft
+        int confidence_max_n_draft = 32;            // 置信度引导最大draft
+        bool confidence_verbose = false;            // 置信度详细日志
+    };
+
+    // ============ 性能统计 ============
+    struct Stats {
+        // 基础统计
+        uint64_t n_predict = 0;     // 总共生成的 tokens 数
+        uint64_t n_drafted = 0;     // 总共 draft 的 tokens 数
+        uint64_t n_accepted = 0;    // 被接受的 draft tokens 数
+
+        // 性能指标
+        double accept_rate = 0.0;   // 接受率 = n_accepted / n_drafted
+        double speedup = 0.0;       // 加速比（相对于传统自回归）
+
+        // 时间统计
+        double time_draft_ms = 0.0;   // Draft 阶段总耗时（毫秒）
+        double time_verify_ms = 0.0;  // Verify 阶段总耗时（毫秒）
+        double time_total_ms = 0.0;   // 总耗时（毫秒）
+
+        // ============ 自适应统计 ============
+        int n_draft_current = 16;          // 当前 draft 数量
+        double recent_accept_rate = 0.0;   // 最近窗口内的平均接受率
+        uint64_t n_adjustments = 0;        // 调整次数
+        uint64_t n_increased = 0;          // 增加 draft 次数
+        uint64_t n_decreased = 0;          // 减少 draft 次数
+        uint64_t n_temperature_fallback = 0;  // 温度过高回退到normal次数
+
+        // ============ 任务感知统计 ============
+        std::string detected_task_type = "UNKNOWN";  // 检测到的任务类型
+        float task_classification_confidence = 0.0f; // 任务分类置信度
+
+        // ============ 置信度引导统计 ============
+        float average_confidence = 0.0f;             // 平均置信度
+        float min_confidence = 1.0f;                 // 最小置信度
+        float max_confidence = 0.0f;                 // 最大置信度
+        uint64_t n_confidence_adjustments = 0;       // 置信度调整次数
+        uint64_t n_confidence_samples = 0;           // 置信度样本数
+
+        // 每 token 平均时间
+        double ms_per_token() const {
+            return n_predict > 0 ? time_total_ms / n_predict : 0.0;
+        }
+
+        // 吞吐量（tokens/秒）
+        double tokens_per_sec() const {
+            return time_total_ms > 0 ? (n_predict * 1000.0) / time_total_ms : 0.0;
+        }
+    };
+
+    // ============ 构造与析构 ============
+
+    /**
+     * @brief 构造推测式解码器
+     *
+     * @param model_target 目标模型（大模型）
+     * @param ctx_target 目标模型上下文
+     * @param draft_model_path Draft 模型路径（小模型）
+     * @param config 配置参数
+     */
+    SpeculativeDecoder(
+        llama_model* model_target,
+        llama_context* ctx_target,
+        const std::string& draft_model_path,
+        const Config& config
+    );
+
+    /**
+     * @brief 构造推测式解码器（使用默认配置）
+     */
+    SpeculativeDecoder(
+        llama_model* model_target,
+        llama_context* ctx_target,
+        const std::string& draft_model_path
+    );
+
     ~SpeculativeDecoder();
 
-    // 禁止拷贝
+    // 禁止拷贝和移动
     SpeculativeDecoder(const SpeculativeDecoder&) = delete;
     SpeculativeDecoder& operator=(const SpeculativeDecoder&) = delete;
 
-    // ============ 初始化接口 ============
+    // ============ 推理接口 ============
 
-    // 加载drafter模型
-    // 返回: 成功返回true, 失败返回false
-    bool loadDraftModel();
-
-    // 卸载drafter模型 (释放内存)
-    void unloadDraftModel();
-
-    // 检查是否已加载
-    bool isLoaded() const { return draft_model_ != nullptr && draft_ctx_ != nullptr; }
-
-    // ============ 配置验证 ============
-
-    // 验证Drafter与Verifier的兼容性
-    // verifier_model: 大模型句柄
-    // 返回: 兼容性检查结果
-    struct CompatibilityResult {
-        bool is_compatible = true;
-        std::string error_message;
-
-        // 具体检查项
-        bool vocab_match = false;       // 词表是否匹配
-        bool tokenizer_match = false;   // 分词器是否匹配
-        int vocab_size_draft = 0;
-        int vocab_size_verifier = 0;
-
-        std::string getSummary() const;
-    };
-    CompatibilityResult checkCompatibility(llama_model* verifier_model) const;
-
-    // 智能判断是否应启用推测式解码
-    // expected_tokens: 预期生成token数
-    // 返回: true=建议启用, false=建议禁用
-    bool shouldEnableForTask(int expected_tokens) const {
-        // 极短回答(<10 tokens)不建议使用
-        const int MIN_TOKENS_THRESHOLD = 10;
-        return expected_tokens >= MIN_TOKENS_THRESHOLD;
-    }
-
-    // ============ 核心解码接口 ============
-
-    // 推测式解码生成tokens
-    // verifier_ctx: 大模型的llama_context (verifier)
-    // prompt_tokens: 已经tokenize的prompt
-    // max_tokens: 最大生成token数
-    // temperature: 采样温度
-    // stop_token: 停止token (通常是EOS)
-    // 返回: 生成的token序列
-    std::vector<int> decode(
-        llama_context* verifier_ctx,
-        const std::vector<int>& prompt_tokens,
+    /**
+     * @brief 使用推测式解码进行推理
+     *
+     * @param prompt 输入提示词
+     * @param max_tokens 最大生成 token 数
+     * @param temperature 温度参数（覆盖 config 中的值）
+     * @return 生成的文本
+     */
+    std::string infer(
+        const std::string& prompt,
         int max_tokens,
-        float temperature,
-        int stop_token
+        float temperature = -1.0f  // -1 表示使用 config 中的值
     );
 
-    // ============ 统计接口 ============
+    /**
+     * @brief 使用推测式解码进行推理（token 级接口）
+     *
+     * @param prompt_tokens 输入 tokens
+     * @param max_tokens 最大生成 token 数
+     * @param temperature 温度参数
+     * @return 生成的 tokens
+     */
+    std::vector<llama_token> inferTokens(
+        const std::vector<llama_token>& prompt_tokens,
+        int max_tokens,
+        float temperature = -1.0f
+    );
 
-    // 获取统计信息
-    const SpeculativeStats& getStats() const { return stats_; }
+    // ============ 统计与监控 ============
 
-    // 重置统计
-    void resetStats() { stats_.reset(); }
+    /**
+     * @brief 获取性能统计信息
+     */
+    Stats getStats() const;
 
-    // 打印统计信息 (用于调试/日志)
-    std::string getStatsString() const;
+    /**
+     * @brief 重置统计信息
+     */
+    void resetStats();
+
+    /**
+     * @brief 打印统计信息
+     */
+    void printStats() const;
 
     // ============ 配置管理 ============
 
-    // 获取当前配置
-    const SpeculativeConfig& getConfig() const { return config_; }
+    /**
+     * @brief 获取当前配置
+     */
+    const Config& getConfig() const { return config_; }
 
-    // 更新配置 (部分参数可运行时调整)
-    void updateConfig(const SpeculativeConfig& new_config);
+    /**
+     * @brief 更新配置（运行时修改）
+     */
+    void updateConfig(const Config& config) { config_ = config; }
+
+    /**
+     * @brief 检查 draft 模型是否已加载
+     */
+    bool isDraftModelLoaded() const { return model_dft_ != nullptr && ctx_dft_ != nullptr; }
 
 private:
-    // ============ 内部方法 ============
+    // ============ 内部状态 ============
 
-    // 起草K个tokens (使用小模型)
-    // input_tokens: 输入token序列 (包括prompt + 已生成的tokens)
-    // K: 要起草的token数量
-    // temperature: 采样温度
-    // 返回: 起草的token序列
-    std::vector<int> draftTokens(
-        const std::vector<int>& input_tokens,
-        int K,
+    // Target model（大模型）
+    llama_model* model_tgt_;
+    llama_context* ctx_tgt_;
+
+    // Draft model（小模型）
+    llama_model* model_dft_;
+    llama_context* ctx_dft_;
+
+    // 配置与统计
+    Config config_;
+    mutable Stats stats_;
+    mutable std::mutex stats_mutex_;
+
+    // ============ 自适应推测相关 ============
+
+    // 滑动窗口：存储最近N次的接受率
+    mutable std::deque<double> accept_rate_window_;
+    mutable std::mutex adaptive_mutex_;
+
+    // ============ 任务感知相关 ============
+
+    // 任务分类器
+    std::unique_ptr<TaskClassifier> task_classifier_;
+
+    // ============ 置信度引导相关 ============
+
+    // 置信度引导策略
+    std::unique_ptr<ConfidenceGuidedStrategy> confidence_strategy_;
+    // 置信度分析器（用于实验数据收集）
+    std::unique_ptr<ConfidenceAnalyzer> confidence_analyzer_;
+
+    // ============ 核心算法 ============
+
+    /**
+     * @brief Draft 阶段：使用小模型生成候选 tokens
+     *
+     * @param prompt 当前 prompt tokens
+     * @param last_token 上一个生成的 token
+     * @param n_past 已处理的 token 数量
+     * @return Draft tokens 序列
+     */
+    std::vector<llama_token> genDraft(
+        const std::vector<llama_token>& prompt,
+        llama_token last_token,
+        int n_past
+    );
+
+    /**
+     * @brief Verify 阶段：使用大模型验证并接受 tokens
+     *
+     * @param draft Draft tokens 序列
+     * @param last_token 上一个生成的 token
+     * @param n_past 已处理的 token 数量
+     * @param temperature 采样温度 (与draft保持一致)
+     * @return 被接受的 tokens
+     */
+    std::vector<llama_token> verifyAndAccept(
+        const std::vector<llama_token>& draft,
+        llama_token last_token,
+        int n_past,
         float temperature
     );
 
-    // 批量校验tokens (使用大模型)
-    // verifier_ctx: 大模型context
-    // input_tokens: 输入序列
-    // draft_tokens: 小模型起草的tokens
-    // temperature: 采样温度
-    // 返回: 接受的token数量 (0-K, 最多K+1个因为verifier会额外生成1个)
-    struct VerifyResult {
-        int accepted_count;              // 接受的draft token数量
-        std::vector<int> accepted_tokens; // 实际接受的tokens (可能包括verifier的额外token)
-    };
-    VerifyResult verifyTokensBatch(
-        llama_context* verifier_ctx,
-        const std::vector<int>& input_tokens,
-        const std::vector<int>& draft_tokens,
-        float temperature
+    // ============ 采样辅助函数 ============
+
+    /**
+     * @brief 从 logits 中采样一个 token
+     */
+    llama_token sampleToken(
+        llama_context* ctx,
+        float temperature,
+        int top_k,
+        float top_p
     );
 
-    // 动态调整K值 (根据接受率)
-    void adjustKValue(float current_acceptance_rate);
+    /**
+     * @brief 贪婪采样（最大概率）
+     */
+    llama_token sampleGreedy(llama_context* ctx);
 
-    // 智能调整K值 (考虑温度和近期趋势)
-    void smartAdjustK(float temperature);
+    /**
+     * @brief 获取 token 的概率
+     */
+    float getTokenProb(llama_context* ctx, llama_token token);
 
-    // 检查是否应该降级到贪婪解码 (early stopping)
-    bool shouldFallbackToGreedy() const;
+    /**
+     * @brief 从指定logits数组计算token概率 (修复版本)
+     */
+    float getTokenProbFromLogits(const float* logits, int n_vocab, llama_token token);
 
-    // 辅助方法: 获取token概率
-    float getTokenProbability(llama_context* ctx, int token, int pos) const;
+    /**
+     * @brief 从指定logits数组采样token
+     */
+    llama_token sampleTokenFromLogits(const float* logits, int n_vocab, float temperature);
 
-    // 辅助方法: 采样下一个token
-    int sampleToken(llama_context* ctx, float temperature) const;
+    // ============ Tokenization ============
 
-    // ============ 成员变量 ============
+    /**
+     * @brief 将文本转换为 tokens
+     */
+    std::vector<llama_token> tokenize(const std::string& text) const;
 
-    SpeculativeConfig config_;  // 配置
-    SpeculativeStats stats_;    // 统计信息
+    /**
+     * @brief 将 token 转换为文本
+     */
+    std::string detokenize(llama_token token) const;
 
-    // Drafter模型资源
-    llama_model* draft_model_ = nullptr;
-    llama_context* draft_ctx_ = nullptr;
+    /**
+     * @brief 将 tokens 序列转换为文本
+     */
+    std::string detokenize(const std::vector<llama_token>& tokens) const;
 
-    // 互斥锁 (保护draft_ctx_的并发访问)
-    mutable std::mutex draft_mutex_;
-};
+    // ============ 自适应推测方法 ============
 
-// ============================================================
-// 工具函数
-// ============================================================
+    /**
+     * @brief 更新滑动窗口中的接受率
+     * @param current_accept_rate 当前轮次的接受率
+     */
+    void updateAcceptRateWindow(double current_accept_rate) const;
 
-// 时间测量辅助类 (RAII)
-class ScopedTimer {
-public:
-    explicit ScopedTimer(std::atomic<uint64_t>& counter)
-        : counter_(counter), start_(std::chrono::steady_clock::now()) {}
+    /**
+     * @brief 计算滑动窗口内的平均接受率
+     * @return 平均接受率
+     */
+    double calculateRecentAcceptRate() const;
 
-    ~ScopedTimer() {
-        auto end = std::chrono::steady_clock::now();
-        auto duration_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start_).count();
-        counter_.fetch_add(duration_ns, std::memory_order_relaxed);
+    /**
+     * @brief 根据接受率自适应调整 draft 数量
+     */
+    void adjustDraftCount();
+
+    /**
+     * @brief 检查温度是否过高，决定是否禁用推测式解码
+     * @param temperature 当前温度
+     * @return true 表示应该禁用推测式解码
+     */
+    bool shouldFallbackDueToTemperature(float temperature) const;
+
+    /**
+     * @brief 记录一次温度过高导致的fallback
+     */
+    void recordTemperatureFallback() const;
+
+    // ============ 时间测量 ============
+
+    using TimePoint = std::chrono::time_point<std::chrono::steady_clock>;
+
+    TimePoint now() const {
+        return std::chrono::steady_clock::now();
     }
 
-private:
-    std::atomic<uint64_t>& counter_;
-    std::chrono::steady_clock::time_point start_;
+    double elapsedMs(TimePoint start, TimePoint end) const {
+        return std::chrono::duration<double, std::milli>(end - start).count();
+    }
 };
+
+/**
+ * @brief 推测式解码工厂函数
+ *
+ * 便捷创建推测式解码器的函数
+ */
+inline std::unique_ptr<SpeculativeDecoder> createSpeculativeDecoder(
+    llama_model* model_target,
+    llama_context* ctx_target,
+    const std::string& draft_model_path,
+    const SpeculativeDecoder::Config& config
+) {
+    return std::make_unique<SpeculativeDecoder>(
+        model_target, ctx_target, draft_model_path, config
+    );
+}
+
+/**
+ * @brief 推测式解码工厂函数（使用默认配置）
+ */
+inline std::unique_ptr<SpeculativeDecoder> createSpeculativeDecoder(
+    llama_model* model_target,
+    llama_context* ctx_target,
+    const std::string& draft_model_path
+) {
+    return std::make_unique<SpeculativeDecoder>(
+        model_target, ctx_target, draft_model_path
+    );
+}

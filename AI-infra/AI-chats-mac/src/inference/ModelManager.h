@@ -3,13 +3,16 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <set>
 #include <mutex>
 #include <sstream>
 #include <chrono>
 #include <cstdint>
 #include <memory>
 #include "PrefixTree.h"  // Prefix Tree for improved cache matching
-#include "SpeculativeDecoder.h"  // Speculative Decoding support
+
+// 前向声明
+class SpeculativeDecoder;
 
 // ------------------ 对话消息结构 ------------------
 // 每条消息包含角色（user/assistant/system）和内容
@@ -151,25 +154,37 @@ public:
 
     // ============ 推测式解码接口 ============
 
-    // 启用推测式解码
-    // draft_model_path: 小模型路径 (drafter)
-    // config: 可选配置，不提供则使用Apple Silicon默认配置
-    bool enableSpeculativeDecoding(
-        const std::string& draft_model_path,
-        const SpeculativeConfig* config = nullptr
-    );
+    // 加载 draft 模型（用于推测式解码）
+    // draft_model_path: draft 模型路径
+    // 返回: 是否加载成功
+    bool loadDraftModel(const std::string& draft_model_path);
 
-    // 禁用推测式解码 (释放drafter模型内存)
-    void disableSpeculativeDecoding();
+    // 启用/禁用推测式解码
+    void setSpeculativeMode(bool enable);
 
-    // 检查推测式解码是否已启用
-    bool isSpeculativeDecodingEnabled() const;
+    // 检查推测式解码是否可用
+    bool isSpeculativeEnabled() const;
+
+    // 推测式解码推理接口
+    // chat_id: 会话标识
+    // user_msg: 用户输入
+    // maxTokens, temperature: 解码参数
+    // 返回: 生成的文本
+    std::string inferSpeculative(const std::string& chat_id,
+                                  const std::string& user_msg,
+                                  int maxTokens,
+                                  float temperature);
 
     // 获取推测式解码统计信息
-    std::string getSpeculativeStats() const;
-
-    // 运行兼容性检查
-    std::string checkSpeculativeCompatibility() const;
+    struct SpeculativeStats {
+        uint64_t n_predict = 0;      // 总生成 tokens
+        uint64_t n_drafted = 0;      // 总 draft tokens
+        uint64_t n_accepted = 0;     // 被接受的 tokens
+        double accept_rate = 0.0;    // 接受率
+        double speedup = 0.0;        // 加速比
+        double time_total_ms = 0.0;  // 总耗时
+    };
+    SpeculativeStats getSpeculativeStats() const;
 
 private:
     ModelManager();
@@ -197,6 +212,7 @@ private:
 
     // 序列ID分配（seq_id=0留给当前推理）
     int next_seq_id_ = 1;
+    std::set<int> available_seq_ids_;  // 可回收的seq_id池
 
     // 缓存限制
     static constexpr size_t MAX_PREFIX_CACHE = 32;  // 最多缓存32个前缀
@@ -205,25 +221,37 @@ private:
     mutable uint64_t total_cache_hits_ = 0;
     mutable uint64_t total_cache_requests_ = 0;
 
-    // ============ 推测式解码 ============
-    std::unique_ptr<SpeculativeDecoder> speculative_decoder_;
-    mutable std::mutex spec_mutex_;  // 保护speculative_decoder_
+    // ============ 推测式解码相关 ============
+    std::unique_ptr<SpeculativeDecoder> spec_decoder_;  // 推测式解码器
+    bool enable_speculative_ = false;                   // 是否启用推测式解码
+    mutable std::mutex spec_mutex_;                     // 保护推测式解码器的互斥锁
 
     // Tokenize: 将文本转换为token序列
     std::vector<int> tokenize(const std::string& text) const;
 
     // **内部**单轮推理：不使用历史，只按给定 prompt 一次性生成
     // prefix_kv_len: 如果>0，表示前prefix_kv_len个token已在KV cache中
-    // use_speculative: 是否使用推测式解码 (如果已启用)
     std::string raw_infer(const std::string& prompt,
                           int maxTokens,
                           float temperature,
-                          int prefix_kv_len = 0,
-                          bool use_speculative = true) const;
+                          int prefix_kv_len = 0) const;
 
-    // 推测式解码路径 (内部使用)
-    std::string raw_infer_speculative(const std::string& prompt,
-                                      int maxTokens,
-                                      float temperature,
-                                      int prefix_kv_len = 0) const;
+    // ============ 序列ID管理辅助函数 ============
+
+    // 分配一个序列ID（优先使用回收的ID，否则递增分配）
+    int allocateSeqId() {
+        if (!available_seq_ids_.empty()) {
+            int sid = *available_seq_ids_.begin();
+            available_seq_ids_.erase(available_seq_ids_.begin());
+            return sid;
+        }
+        return next_seq_id_++;
+    }
+
+    // 释放序列ID（加入回收池）
+    void releaseSeqId(int seq_id) {
+        if (seq_id > 0) {  // seq_id=0 保留给当前推理，不回收
+            available_seq_ids_.insert(seq_id);
+        }
+    }
 };
