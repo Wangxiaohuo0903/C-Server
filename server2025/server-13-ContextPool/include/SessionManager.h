@@ -85,32 +85,34 @@ struct Session {
     }
 
     // 获取完整的上下文（拼接所有历史消息）
-    // 格式：ChatGPT风格的对话格式
+    // 获取完整的上下文（拼接所有历史消息）
+    // 格式：ChatML
     std::string getFullContext() const {
         std::string context;
         for (const auto& msg : history) {
-            if (msg.role == "user") {
-                context += "User: " + msg.content + "\n";
-            } else {
-                context += "Assistant: " + msg.content + "\n";
-            }
+            context += "<|im_start|>" + msg.role + "\n" + msg.content + "<|im_end|>\n";
         }
         return context;
     }
 
     // 获取最近N轮对话的上下文
     // n_turns: 轮数（1轮 = 1个用户消息 + 1个助手回复）
+    // 格式：ChatML
     std::string getRecentContext(int n_turns = 5) const {
         std::string context;
+        
         int start_idx = std::max(0, (int)history.size() - n_turns * 2);
 
         for (size_t i = start_idx; i < history.size(); ++i) {
-            if (history[i].role == "user") {
-                context += "User: " + history[i].content + "\n";
-            } else {
-                context += "Assistant: " + history[i].content + "\n";
-            }
+            const auto& msg = history[i];
+            context += "<|im_start|>" + msg.role + "\n" + msg.content + "<|im_end|>\n";
         }
+        
+        // Trigger
+        if (!history.empty() && history.back().role == "user") {
+            context += "<|im_start|>assistant\n";
+        }
+
         return context;
     }
 

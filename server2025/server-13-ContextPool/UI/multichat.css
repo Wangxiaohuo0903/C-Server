@@ -169,21 +169,21 @@ body {
     display: flex;
     gap: 16px;
     margin-bottom: 24px;
+    align-items: flex-start;
+    padding: 16px 20px;
+    overflow: hidden; /* 新增：确保内容不会溢出到其他消息上 */
+}
+
+.message.user {
     max-width: 900px;
     margin-left: auto;
     margin-right: auto;
 }
 
-.message.user {
-    background-color: #343541;
-}
-
 .message.assistant {
     background-color: #444654;
-    margin-left: 0;
-    margin-right: 0;
-    max-width: none;
-    padding: 20px;
+    max-width: 100%;
+    width: 100%;
 }
 
 .message-avatar {
@@ -207,10 +207,16 @@ body {
 
 .message-content {
     flex: 1;
+    min-width: 0;
     line-height: 1.6;
     font-size: 15px;
     white-space: pre-wrap;
     word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    display: block; /* 新增：明确块级属性 */
+    word-break: break-all; /* 新增：更强的换行规则 */
+    min-height: 24px; /* 新增：防止高度崩溃 */
 }
 
 /* 输入中动画 */
@@ -245,6 +251,23 @@ body {
     30% {
         transform: translateY(-10px);
         opacity: 1;
+    }
+}
+
+/* 流式输出动画 - 打字光标效果 */
+.message-content.streaming::after {
+    content: '▊';
+    animation: blink 1s infinite;
+    margin-left: 2px;
+    color: #19c37d;
+}
+
+@keyframes blink {
+    0%, 50% {
+        opacity: 1;
+    }
+    51%, 100% {
+        opacity: 0;
     }
 }
 

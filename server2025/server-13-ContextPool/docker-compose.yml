@@ -1,29 +1,34 @@
 version: '3.8'
 
 services:
-  server12:
+  server13:
     build:
       context: .
       dockerfile: Dockerfile
-    image: server12:latest
-    container_name: server12_multichat
+    image: server13:latest
+    container_name: server13_context_pool
     ports:
-      - "6060:8080"  # 本地6060端口 → Docker内8080端口
+      - "6060:8080"
     volumes:
-      # 挂载模型文件（从AI-infra）
-      - ../../AI-infra/models:/app/models:ro
+      # Mount models from server-11-LLM which we know exists
+      - ../server-11-LLM/models:/app/models:ro
     environment:
-      - MODEL_PATH=/app/models/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf  # DeepSeek-R1 1.5B (推理能力强)
+      # Use the verified existing model
+      - MODEL_PATH=/app/models/smollm-360m-q4.gguf
+      - N_THREADS=4
+      - MAX_SESSIONS=100
+      - ENABLE_BATCH=true
+      - BATCH_SIZE=8
     restart: unless-stopped
     deploy:
       resources:
         limits:
           cpus: '4.0'
-          memory: 2G
+          memory: 4G
         reservations:
           memory: 512M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/sessions"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3

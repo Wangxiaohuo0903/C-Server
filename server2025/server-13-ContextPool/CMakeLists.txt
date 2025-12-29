@@ -36,7 +36,7 @@ set(GGML_CPU_ALL_VARIANTS OFF CACHE BOOL "" FORCE)
 option(WITH_GPU "Enable CUDA/CUBLAS in llama.cpp" OFF)
 
 # 计算第三方源码的绝对路径
-set(LLAMA_SRC "${CMAKE_SOURCE_DIR}/../third_party/llama.cpp")
+set(LLAMA_SRC "${CMAKE_SOURCE_DIR}/third_party/llama.cpp")
 # 指定编译输出放到 build/third_party/llama.cpp
 set(LLAMA_BIN "${CMAKE_BINARY_DIR}/third_party/llama.cpp")
 
@@ -54,6 +54,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include
 # 5. 收集源文件
 # ───────────────────────────────────────────────────────────
 file(GLOB_RECURSE SERVER_SRCS "${PROJECT_SOURCE_DIR}/src/*.cpp")
+# 移除旧的 main.cpp，使用 main_v2.cpp
+list(REMOVE_ITEM SERVER_SRCS "${PROJECT_SOURCE_DIR}/src/main.cpp")
 
 # ───────────────────────────────────────────────────────────
 # 6. 生成可执行文件

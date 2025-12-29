@@ -75,7 +75,8 @@
       "Bash(perl -i.bak2 -pe 'print \"\"\n            // 移除模型生成的假对话（防止模型继续生成User:/Assistant:)\n            size_t user_pos = assistant_reply.find(\\\"\"\\\\nUser:\\\"\");\n            size_t assistant_pos = assistant_reply.find(\\\"\"\\\\nAssistant:\\\"\");\n            size_t cut_pos = std::string::npos;\n\n            if (user_pos != std::string::npos && assistant_pos != std::string::npos) {\n                cut_pos = std::min(user_pos, assistant_pos);\n            } else if (user_pos != std::string::npos) {\n                cut_pos = user_pos;\n            } else if (assistant_pos != std::string::npos) {\n                cut_pos = assistant_pos;\n            }\n\n            if (cut_pos != std::string::npos) {\n                assistant_reply = assistant_reply.substr(0, cut_pos);\n            }\n\n            // 去除首尾空白\n            auto trim = [](std::string& s) {\n                s.erase(0, s.find_first_not_of(\\\"\" \\\\t\\\\n\\\\r\\\"\"));\n                s.erase(s.find_last_not_of(\\\"\" \\\\t\\\\n\\\\r\\\"\") + 1);\n            };\n            trim(assistant_reply);\n\"\" if /std::string assistant_reply = mm\\.raw_infer/' Router.h)",
       "Bash(git config:*)",
       "Bash(wmic process where \"name like ''%explorer%'' or name like ''%SearchIndexer%''\" get name,processid)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

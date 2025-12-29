@@ -17,7 +17,7 @@
 #include "HttpRequest.h"   // HTTP 请求解析器
 #include "HttpResponse.h"  // HTTP 响应构造器
 #include "Database.h"      // 数据库封装
-#include "inference/ModelManager.h" // LLM 模型管理
+#include "ModelManagerV2.h" // LLM 模型管理
 
 /**
  * HttpServer: 使用 epoll + 线程池 的轻量级 HTTP 服务器
@@ -62,8 +62,8 @@ public:
             if (chatId.empty()) chatId = "default";
 
             // 单例模型管理器，用 chatId 区分会话
-            auto& mgr = ModelManager::instance();
-            std::string answer = mgr.infer(chatId, prompt, /*maxTokens=*/64, /*temp=*/0.7f);
+            auto& mgr = ModelManagerV2::instance();
+            std::string answer = mgr.inferWithCache(chatId, prompt, /*maxTokens=*/64, /*temp=*/0.7f);
 
             HttpResponse r(200);
             r.setHeader("Content-Type", "application/json");
@@ -75,7 +75,7 @@ public:
         router.addRoute("POST", "/reset", [](const HttpRequest& req) {
             auto id = req.parseJsonField("chat_id");
             if (id.empty()) id = "default";
-            ModelManager::instance().dropSession(id);
+            ModelManagerV2::instance().deleteSession(id);
             return HttpResponse::makeOkResponse("reset ok");
         });
     }
@@ -94,8 +94,8 @@ public:
         // 1) 注册 HTTP 路由
         setupRoutes();
         setupInferRoute();
-        router.setupChatRoutes(db, ModelManager::instance());
-        router.setupSessionRoutes(sessionManager, ModelManager::instance());  // Server-12新增
+        router.setupChatRoutes(db, ModelManagerV2::instance());
+        router.setupSessionRoutes(sessionManager, ModelManagerV2::instance());  // Server-12新增
         router.setupStaticPages();
 
         // 2) 创建固定大小线程池

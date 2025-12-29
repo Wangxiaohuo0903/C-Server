@@ -1,55 +1,60 @@
 /*==========================================================
- * Server-12: 多轮对话AI服务器
+ * Server-13: Context Pool & Batching AI Server
  *
- * 新增功能：
- * - SessionManager：多会话管理
- * - 类似ChatGPT的多对话窗口
- * - 支持会话历史记录
+ * Major Upgrades:
+ * - ModelManagerV2: Manages context pool and batching.
+ * - SessionContextPool: Reuses KV cache between requests.
  *=========================================================*/
 
 #include "HttpServer.h"
 #include "Database.h"
-#include "SessionManager.h"  // Server-12新增
-#include "inference/ModelManager.h"
+#include "SessionManager.h" 
+#include "ModelManagerV2.h" // Use the new V2 Model Manager
 #include <iostream>
 #include <cstdlib>
 
 int main() {
-    std::cout << "=== Server-12: Multi-Chat AI Server ===\n";
+    std::cout << "=== Server-13: Context Pool & Batching AI Server ===\n";
 
-    // 1. 初始化数据库
+    // 1. 初始化数据库 (for UI session management)
     Database db("users.db");
     std::cout << "✓ Database initialized\n";
 
-    // 2. 加载量化模型（从环境变量或使用默认路径）
+    // 2. 加载模型 using ModelManagerV2
     const char* envModelPath = std::getenv("MODEL_PATH");
-    const std::string modelPath = envModelPath ? envModelPath : "../models/smollm-360m-q4.gguf";
+    const std::string modelPath = envModelPath ? envModelPath : "../models/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf";
+
+    const int n_ctx = 2048;
+    const int n_threads = std::getenv("OMP_NUM_THREADS") ? std::atoi(std::getenv("OMP_NUM_THREADS")) : 4;
+    const int max_sessions = 100;
+    const bool enable_batch = false; // 禁用批处理以进行简单测试
+    const int batch_size = 8;
 
     std::cout << "Loading model: " << modelPath << "\n";
-    if (!ModelManager::instance().loadModel(modelPath,
-                                            /*n_ctx=*/2048,
-                                            /*n_threads=*/4)) {
-        std::cerr << "❌ Model load failed\n";
+    if (!ModelManagerV2::instance().loadModel(modelPath,
+                                            n_ctx,
+                                            n_threads,
+                                            max_sessions,
+                                            enable_batch,
+                                            batch_size)) {
+        std::cerr << "❌ Model load failed (V2)\n";
         return 1;
     }
-    std::cout << "✓ Model loaded successfully\n";
+    std::cout << "✓ Model loaded successfully (V2)\n";
 
-    // 3. Server-12新增：创建SessionManager（全局单例）
+    // 3. 初始化 UI SessionManager (for chat history list)
     static SessionManager sessionManager;
-    std::cout << "✓ SessionManager initialized\n";
+    std::cout << "✓ UI SessionManager initialized\n";
 
     // 4. 创建HttpServer
     HttpServer server(8080, /*max_events=*/10, db);
 
-    // 5. 注册路由（在start()中完成，但需要传入sessionManager）
-    // 为了简化，我们需要修改HttpServer::start()来接受sessionManager
-    // 这里我们通过修改HttpServer类来支持
-
-    std::cout << "\n🚀 Server-12 starting on port 8080...\n";
-    std::cout << "   Visit http://localhost:8080/multichat.html\n";
+    std::cout << "\n🚀 Server-13 starting on port 8080...\n";
+    std::cout << "   Host port mapping: http://localhost:6060\n";
     std::cout << "   Press Ctrl+C to stop\n\n";
 
-    // 启动服务器（传入sessionManager）
+    // 启动服务器
+    // The routing logic inside HttpServer needs to use ModelManagerV2
     server.start(sessionManager);
 
     return 0;

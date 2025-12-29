@@ -3,8 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat - Server 12</title>
-    <link rel="stylesheet" href="/multichat.css">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>AI Chat - Server 13 (Stream)</title>
+    <script>
+        // 动态加载CSS以防止浏览器缓存
+        const cssLink = document.createElement('link');
+        cssLink.rel = 'stylesheet';
+        cssLink.href = `/multichat.css?v=${new Date().getTime()}`;
+        document.head.appendChild(cssLink);
+    </script>
 </head>
 <body>
     <div class="app-container">
@@ -229,7 +238,8 @@
             input.value = '';
 
             try {
-                const response = await fetch(`/api/sessions/${currentSessionId}/chat`, {
+                // 使用流式API
+                const response = await fetch(`/api/sessions/${currentSessionId}/chat/stream`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
@@ -241,16 +251,54 @@
 
                 if (!response.ok) throw new Error('发送失败');
 
-                const data = await response.json();
-
-                // 替换typing indicator为实际回复
+                // 获取最后一条assistant消息的content区域
                 const messages = container.querySelectorAll('.message.assistant');
                 const lastMessage = messages[messages.length - 1];
-                lastMessage.querySelector('.message-content').innerHTML = escapeHtml(data.message);
+                const contentDiv = lastMessage.querySelector('.message-content');
 
-                container.scrollTop = container.scrollHeight;
+                // 清空typing indicator，准备接收流式内容
+                contentDiv.innerHTML = '';
+                contentDiv.classList.add('streaming'); // 添加流式状态标记
 
-                // 更新会话列表（消息数量变化）
+                // 解析 SSE 流
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let fullText = '';
+
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, {stream: true});
+
+                    // 处理完整的 SSE 事件
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // 保留不完整的行
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const jsonStr = line.slice(6);
+                            try {
+                                const data = JSON.parse(jsonStr);
+
+                                if (data.token) {
+                                    // 逐token显示（流式输出）
+                                    fullText += data.token;
+                                    contentDiv.textContent = fullText;
+                                    container.scrollTop = container.scrollHeight;
+                                } else if (data.done) {
+                                    // 完成
+                                    contentDiv.classList.remove('streaming');
+                                }
+                            } catch (e) {
+                                // 忽略解析错误
+                            }
+                        }
+                    }
+                }
+
+                // 更新会话列表
                 await loadSessions();
             } catch (error) {
                 console.error('发送消息失败:', error);
