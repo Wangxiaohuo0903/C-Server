@@ -1,0 +1,21 @@
+# Model files - too large for GitHub
+*.gguf
+
+# Build artifacts
+build/
+*.o
+*.obj
+*.exe
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
