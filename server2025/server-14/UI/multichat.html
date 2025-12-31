@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>AI Chat - Server 13 (Stream)</title>
+    <script>
+        // 动态加载CSS以防止浏览器缓存
+        const cssLink = document.createElement('link');
+        cssLink.rel = 'stylesheet';
+        cssLink.href = `/multichat.css?v=${new Date().getTime()}`;
+        document.head.appendChild(cssLink);
+    </script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏：会话列表 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button class="new-chat-btn" onclick="createNewSession()">
+                    <span class="plus-icon">+</span> 新增对话
+                </button>
+            </div>
+            <div class="sessions-list" id="sessions-list">
+                <!-- 会话列表动态加载 -->
+            </div>
+        </div>
+
+        <!-- 主聊天区域 -->
+        <div class="chat-main">
+            <!-- 聊天头部 -->
+            <div class="chat-header">
+                <div class="chat-title" id="chat-title">AI Assistant</div>
+                <div class="chat-actions">
+                    <button class="action-btn" onclick="deleteCurrentSession()" title="删除当前对话">
+                        🗑️
+                    </button>
+                    <button class="action-btn" onclick="handleLogout()" title="退出登录">
+                        🚪
+                    </button>
+                </div>
+            </div>
+
+            <!-- 消息显示区域 -->
+            <div class="messages-container" id="messages">
+                <div class="welcome-message">
+                    <h2>👋 你好！</h2>
+                    <p>我是AI助手，有什么可以帮助你的吗？</p>
+                </div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea
+                        id="message-input"
+                        placeholder="输入消息... (Shift+Enter换行, Enter发送)"
+                        rows="1"
+                    ></textarea>
+                    <button class="send-btn" onclick="sendMessage()">
+                        <span class="send-icon">➤</span>
+                    </button>
+                </div>
+                <div class="input-hint">
+                    使用 Shift + Enter 换行，Enter 发送消息
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentSessionId = null;
+        let sessions = [];
+
+        // Server-14: 获取 JWT token
+        function getAuthToken() {
+            return localStorage.getItem('jwt_token');
+        }
+
+        // Server-14: 检查是否已登录
+        function checkAuth() {
+            const token = getAuthToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Server-14: 处理 API 响应（检查 401）
+        async function handleAuthResponse(response) {
+            if (response.status === 401) {
+                alert('登录已过期，请重新登录');
+                localStorage.removeItem('jwt_token');
+                localStorage.removeItem('username');
+                window.location.href = '/login.html';
+                throw new Error('Unauthorized');
+            }
+            return response;
+        }
+
+        // Server-14: 页面加载时初始化
+        window.addEventListener('load', async () => {
+            // 检查登录状态
+            if (!checkAuth()) {
+                return;
+            }
+
+            // 显示用户名
+            const username = localStorage.getItem('username');
+            if (username) {
+                const titleDiv = document.getElementById('chat-title');
+                titleDiv.innerHTML = `AI Assistant <span style="font-size: 0.8em; color: #666;">(@${escapeHtml(username)})</span>`;
+            }
+
+            await loadSessions();
+
+            // 如果没有会话，创建一个新会话
+            if (sessions.length === 0) {
+                await createNewSession();
+            } else {
+                // 自动选择第一个会话
+                switchSession(sessions[0].session_id);
+            }
+        });
+
+        // Server-14: 创建新会话（带 JWT）
+        async function createNewSession() {
+            try {
+                const token = getAuthToken();
+                const response = await fetch('/api/sessions/new', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                await handleAuthResponse(response);
+                if (!response.ok) throw new Error('创建会话失败');
+
+                const data = await response.json();
+                currentSessionId = data.session_id;
+
+                await loadSessions();
+                switchSession(currentSessionId);
+
+                // 清空消息区域
+                document.getElementById('messages').innerHTML = `
+                    <div class="welcome-message">
+                        <h2>👋 你好！</h2>
+                        <p>我是AI助手，有什么可以帮助你的吗？</p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('创建会话失败:', error);
+                alert('创建新对话失败，请重试');
+            }
+        }
+
+        // Server-14: 加载所有会话（带 JWT）
+        async function loadSessions() {
+            try {
+                const token = getAuthToken();
+                const response = await fetch('/api/sessions', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                await handleAuthResponse(response);
+                if (!response.ok) throw new Error('加载会话列表失败');
+
+                sessions = await response.json();
+                renderSessions();
+            } catch (error) {
+                console.error('加载会话失败:', error);
+            }
+        }
+
+        // 渲染会话列表
+        function renderSessions() {
+            const container = document.getElementById('sessions-list');
+
+            if (sessions.length === 0) {
+                container.innerHTML = '<div class="no-sessions">暂无对话</div>';
+                return;
+            }
+
+            container.innerHTML = sessions.map(session => `
+                <div class="session-item ${session.session_id === currentSessionId ? 'active' : ''}"
+                     onclick="switchSession('${session.session_id}')">
+                    <div class="session-title">${escapeHtml(session.title)}</div>
+                    <div class="session-info">${session.turn_count} 条对话</div>
+                </div>
+            `).join('');
+        }
+
+        // 切换会话
+        async function switchSession(sessionId) {
+            currentSessionId = sessionId;
+
+            // 更新UI
+            renderSessions();
+
+            // 加载会话历史
+            await loadHistory(sessionId);
+
+            // 获取会话信息并更新标题
+            const session = sessions.find(s => s.session_id === sessionId);
+            if (session) {
+                document.getElementById('chat-title').textContent = session.title;
+            }
+        }
+
+        // Server-14: 加载会话历史（带 JWT）
+        async function loadHistory(sessionId) {
+            try {
+                const token = getAuthToken();
+                const response = await fetch(`/api/sessions/${sessionId}/history`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                await handleAuthResponse(response);
+                if (!response.ok) throw new Error('加载历史失败');
+
+                const history = await response.json();
+                const container = document.getElementById('messages');
+
+                if (history.length === 0) {
+                    container.innerHTML = `
+                        <div class="welcome-message">
+                            <h2>👋 你好！</h2>
+                            <p>我是AI助手，有什么可以帮助你的吗？</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = history.map(msg => `
+                    <div class="message ${msg.role}">
+                        <div class="message-avatar">${msg.role === 'user' ? '👤' : '🤖'}</div>
+                        <div class="message-content">${escapeHtml(msg.content)}</div>
+                    </div>
+                `).join('');
+
+                // 滚动到底部
+                container.scrollTop = container.scrollHeight;
+            } catch (error) {
+                console.error('加载历史失败:', error);
+            }
+        }
+
+        // 发送消息
+        async function sendMessage() {
+            if (!currentSessionId) {
+                alert('请先创建对话');
+                return;
+            }
+
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // 禁用输入
+            input.disabled = true;
+            const sendBtn = document.querySelector('.send-btn');
+            sendBtn.disabled = true;
+
+            // 添加用户消息到界面
+            const container = document.getElementById('messages');
+
+            // 移除欢迎消息
+            const welcome = container.querySelector('.welcome-message');
+            if (welcome) welcome.remove();
+
+            container.innerHTML += `
+                <div class="message user">
+                    <div class="message-avatar">👤</div>
+                    <div class="message-content">${escapeHtml(message)}</div>
+                </div>
+                <div class="message assistant">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-body">
+                        <div class="thinking-section" style="display: none;">
+                            <div class="thinking-header" onclick="toggleThinking(this)">
+                                <span class="thinking-icon">💭</span>
+                                <span class="thinking-title">思考过程</span>
+                                <span class="thinking-toggle">▼</span>
+                            </div>
+                            <div class="thinking-content"></div>
+                        </div>
+                        <div class="message-content typing-indicator">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.scrollTop = container.scrollHeight;
+
+            // 清空输入框
+            input.value = '';
+
+            try {
+                // Server-14: 使用流式API（带 JWT）
+                const token = getAuthToken();
+                const response = await fetch(`/api/sessions/${currentSessionId}/chat/stream`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        max_tokens: 2048,  // Server-14: 增加到 2048，避免截断
+                        temperature: 0.6   // Server-14: DeepSeek-R1 推荐 0.6
+                    })
+                });
+
+                await handleAuthResponse(response);
+                if (!response.ok) throw new Error('发送失败');
+
+                // 获取最后一条assistant消息的区域
+                const messages = container.querySelectorAll('.message.assistant');
+                const lastMessage = messages[messages.length - 1];
+                const contentDiv = lastMessage.querySelector('.message-content');
+                const thinkingSection = lastMessage.querySelector('.thinking-section');
+                const thinkingContent = lastMessage.querySelector('.thinking-content');
+
+                // 清空typing indicator，准备接收流式内容
+                contentDiv.innerHTML = '';
+                contentDiv.classList.add('streaming'); // 添加流式状态标记
+
+                // 解析 SSE 流 (Server-14: 支持分离的思考过程)
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let fullThinking = '';
+                let fullAnswer = '';
+                let hasThinking = false;
+
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, {stream: true});
+
+                    // 处理完整的 SSE 事件
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // 保留不完整的行
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const jsonStr = line.slice(6);
+                            try {
+                                const data = JSON.parse(jsonStr);
+
+                                if (data.token) {
+                                    // 根据类型显示到不同区域
+                                    if (data.type === 'thinking') {
+                                        fullThinking += data.token;
+                                        thinkingContent.textContent = fullThinking;
+                                        if (!hasThinking) {
+                                            thinkingSection.style.display = 'block';
+                                            hasThinking = true;
+                                        }
+                                    } else {
+                                        // 默认或 'answer' 类型
+                                        fullAnswer += data.token;
+                                        contentDiv.textContent = fullAnswer;
+                                    }
+                                    container.scrollTop = container.scrollHeight;
+                                } else if (data.done) {
+                                    // 完成
+                                    contentDiv.classList.remove('streaming');
+                                    // 如果有 thinking 和 answer 字段，使用最终清理后的版本
+                                    if (data.thinking) {
+                                        thinkingContent.textContent = data.thinking;
+                                        thinkingSection.style.display = 'block';
+                                    }
+                                    if (data.message) {
+                                        contentDiv.textContent = data.message;
+                                    }
+                                }
+                            } catch (e) {
+                                // 忽略解析错误
+                            }
+                        }
+                    }
+                }
+
+                // 更新会话列表
+                await loadSessions();
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                alert('发送失败，请重试');
+
+                // 移除最后的消息
+                const messages = container.querySelectorAll('.message');
+                if (messages.length >= 2) {
+                    messages[messages.length - 1].remove();  // assistant message
+                    messages[messages.length - 2].remove();  // user message
+                }
+            } finally {
+                // 重新启用输入
+                input.disabled = false;
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        // Server-14: 折叠/展开思考过程
+        function toggleThinking(header) {
+            const section = header.parentElement;
+            const content = section.querySelector('.thinking-content');
+            const toggle = header.querySelector('.thinking-toggle');
+
+            if (content.style.display === 'none' || !content.style.display) {
+                content.style.display = 'block';
+                toggle.textContent = '▲';
+                section.classList.add('expanded');
+            } else {
+                content.style.display = 'none';
+                toggle.textContent = '▼';
+                section.classList.remove('expanded');
+            }
+        }
+
+        // Server-14: 删除当前会话（带 JWT）
+        async function deleteCurrentSession() {
+            if (!currentSessionId) return;
+
+            if (!confirm('确定要删除当前对话吗？此操作无法撤销。')) return;
+
+            try {
+                const token = getAuthToken();
+                const response = await fetch(`/api/sessions/${currentSessionId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                await handleAuthResponse(response);
+                if (!response.ok) throw new Error('删除失败');
+
+                // 切换到其他会话或创建新会话
+                await loadSessions();
+
+                if (sessions.length > 0) {
+                    switchSession(sessions[0].session_id);
+                } else {
+                    await createNewSession();
+                }
+            } catch (error) {
+                console.error('删除会话失败:', error);
+                alert('删除失败，请重试');
+            }
+        }
+
+        // 输入框事件处理
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('message-input');
+
+            // Enter发送, Shift+Enter换行
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // 自动调整textarea高度
+            input.addEventListener('input', () => {
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight, 200) + 'px';
+            });
+        });
+
+        // Server-14: 登出
+        function handleLogout() {
+            if (confirm('确定要退出登录吗？')) {
+                localStorage.removeItem('jwt_token');
+                localStorage.removeItem('username');
+                window.location.href = '/login.html';
+            }
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

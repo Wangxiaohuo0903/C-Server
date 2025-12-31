@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Server-13 服务器（生产模式）
+  server13:
+    build:
+      context: .
+      dockerfile: Dockerfile.server13
+    image: server13:latest
+    container_name: server13_contextpool
+    ports:
+      - "6060:8080"  # 本地6060端口 → Docker内8080端口
+    volumes:
+      # 挂载模型文件（从AI-infra）
+      - ../../AI-infra/models:/app/models:ro
+    environment:
+      - MODEL_PATH=/app/models/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf
+      - OMP_NUM_THREADS=4
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/sessions"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Server-13 测试容器（测试模式）
+  server13-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.server13
+    image: server13:latest
+    container_name: server13_test
+    volumes:
+      - ../../AI-infra/models:/app/models:ro
+    environment:
+      - MODEL_PATH=/app/models/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf
+      - OMP_NUM_THREADS=4
+    command: ["./test_context_pool"]
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G

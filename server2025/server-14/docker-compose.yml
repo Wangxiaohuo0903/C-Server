@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  server13:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: server13:latest
+    container_name: server13_context_pool
+    ports:
+      - "6060:8080"
+    volumes:
+      # Mount models from server-11-LLM which we know exists
+      - ../server-11-LLM/models:/app/models:ro
+    environment:
+      # Use the verified existing model
+      - MODEL_PATH=/app/models/smollm-360m-q4.gguf
+      - N_THREADS=4
+      - MAX_SESSIONS=100
+      - ENABLE_BATCH=true
+      - BATCH_SIZE=8
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
