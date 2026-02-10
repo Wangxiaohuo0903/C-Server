@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  unified_server:
+    build:
+      context: .
+      dockerfile: Dockerfile.unified
+    image: server_unified:latest
+    container_name: server_unified_container
+    ports:
+      - "8080:8080" # Map container port 8080 to host port 8080
+    volumes:
+      # Mount your model file here. 
+      # The example uses a model from a sibling `models` directory.
+      - ../models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf:/app/models/model.gguf:ro
+    environment:
+      - MODEL_PATH=/app/models/model.gguf
+      - N_THREADS=4 # Adjust based on your CPU
+    tty: true # Keep container running for interactive shell
+    stdin_open: true # Keep container running for interactive shell

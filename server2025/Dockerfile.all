@@ -1,0 +1,100 @@
+# Server2025 统一镜像
+#
+# 构建镜像:
+#   docker build -f Dockerfile.all -t server2025 .
+#
+# 运行 (挂载模型):
+#   docker run -it -p 8080:8080 -v /path/to/models/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_L.gguf:/app/models/model.gguf server2025
+#
+# 示例 (当前目录结构):
+#   docker run -it -p 8080:8080 -v ../models/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_L.gguf:/app/models/model.gguf server2025
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 使用阿里云镜像源加速
+RUN sed -i 's|http://ports.ubuntu.com|http://mirrors.aliyun.com|g' /etc/apt/sources.list && \
+    sed -i 's|http://archive.ubuntu.com|http://mirrors.aliyun.com|g' /etc/apt/sources.list
+
+# 安装依赖
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential cmake git curl \
+    libcurl4-openssl-dev \
+    libsqlite3-dev libssl-dev ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 复制共享的 llama.cpp (只需要一份)
+COPY third_party/llama.cpp /app/third_party/llama.cpp
+
+# 构建 llama.cpp
+RUN cd /app/third_party/llama.cpp && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF \
+        -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF && \
+    cmake --build build -j$(nproc)
+
+# 复制各服务器代码
+COPY server-11-LLM /app/server-11-LLM
+COPY server-12-MultiChat /app/server-12-MultiChat
+COPY server-13-KVcache /app/server-13-KVcache
+COPY server-14 /app/server-14
+COPY server14-1-Batch /app/server14-1-Batch
+
+# 构建 Server-11-LLM
+RUN mkdir -p /app/server-11-LLM/build && \
+    g++ /app/server-11-LLM/main.cpp \
+        -o /app/server-11-LLM/build/ai_infra_server_11 \
+        -I/app/server-11-LLM \
+        -I/app/third_party/llama.cpp/include \
+        -I/app/third_party/llama.cpp/ggml/include \
+        -L/app/third_party/llama.cpp/build/bin \
+        -Wl,-rpath,/app/third_party/llama.cpp/build/bin \
+        -lllama -lggml -lsqlite3 -lpthread \
+        -std=c++17 -O2
+
+# 构建 Server-12
+RUN cd /app/server-12-MultiChat && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build -j$(nproc)
+
+# 构建 Server-13
+RUN cd /app/server-13-KVcache && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build -j$(nproc)
+
+# 构建 Server-14
+RUN cd /app/server-14 && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build -j$(nproc)
+
+# 构建 Server-14-Batch
+RUN cd /app/server14-1-Batch && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build -j$(nproc)
+
+# 创建模型目录
+RUN mkdir -p /app/models
+
+# 启动脚本
+RUN echo '#!/bin/bash\n\
+echo "================================"\n\
+echo "  Server2025 统一镜像"\n\
+echo "================================"\n\
+echo ""\n\
+echo "可用服务器:"\n\
+echo "  cd /app/server-11-LLM && ./build/ai_infra_server_11"\n\
+echo "  cd /app/server-12-MultiChat && ./build/ai_infra_server"\n\
+echo "  cd /app/server-13-KVcache && ./build/ai_infra_server"\n\
+echo "  cd /app/server-14 && ./build/ai_infra_server"\n\
+echo "  cd /app/server14-1-Batch && ./build/ai_infra_server"\n\
+echo ""\n\
+exec bash' > /app/start.sh && chmod +x /app/start.sh
+
+ENV MODEL_PATH=/app/models/model.gguf
+ENV N_THREADS=4
+
+EXPOSE 8080
+
+CMD ["/app/start.sh"]

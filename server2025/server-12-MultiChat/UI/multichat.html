@@ -246,7 +246,9 @@
                 // 替换typing indicator为实际回复
                 const messages = container.querySelectorAll('.message.assistant');
                 const lastMessage = messages[messages.length - 1];
-                lastMessage.querySelector('.message-content').innerHTML = escapeHtml(data.message);
+                const contentDiv = lastMessage.querySelector('.message-content');
+                contentDiv.classList.remove('typing-indicator'); // 移除 typing-indicator 类
+                contentDiv.innerHTML = escapeHtml(data.message);
 
                 container.scrollTop = container.scrollHeight;
 

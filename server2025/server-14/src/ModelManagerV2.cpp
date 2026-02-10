@@ -52,6 +52,11 @@ bool ModelManagerV2::loadModel(
 
     // 加载新模型
     llama_model_params mp = llama_model_default_params();
+
+    // macOS Docker 修复: 禁用 mmap，使用内存加载
+    mp.use_mmap = false;  // 禁用 mmap
+    mp.use_mlock = false; // 禁用 mlock
+
     model_ = llama_model_load_from_file(path.c_str(), mp);
 
     if (!model_) {

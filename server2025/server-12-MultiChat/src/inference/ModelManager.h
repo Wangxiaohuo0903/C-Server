@@ -266,6 +266,8 @@ public:
                           int maxTokens,
                           float temperature) const;
 
+    const struct llama_model* getModel() const { return model_; }
+
 private:
     // 私有构造/析构函数：实现单例模式
     ModelManager();

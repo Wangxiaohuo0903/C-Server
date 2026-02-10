@@ -1,0 +1,170 @@
+# =======================================================================================
+# Server 1-14 Unified Dockerfile
+#
+# Build command:
+#   docker build -f Dockerfile.unified -t server_unified .
+#
+# Run command (example):
+#   docker compose -f docker-compose.unified.yml up -d --build
+# =======================================================================================
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Use a faster mirror for apt
+RUN sed -i 's|http://archive.ubuntu.com|http://mirrors.aliyun.com|g' /etc/apt/sources.list
+
+# ---------------------------------------------------------------------------------------
+# 1. Install ALL dependencies for Server 1-14
+# ---------------------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    curl \
+    nginx \
+    libsqlite3-dev \
+    libssl-dev \
+    libcurl4-openssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# ---------------------------------------------------------------------------------------
+# 2. Build shared llama.cpp library (for Server 11+)
+# ---------------------------------------------------------------------------------------
+COPY third_party/llama.cpp /app/third_party/llama.cpp
+RUN cd /app/third_party/llama.cpp && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=OFF -DBUILD_SHARED_LIBS=ON \
+        -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_SERVER=OFF && \
+    cmake --build build -j$(nproc)
+
+# ---------------------------------------------------------------------------------------
+# 3. Copy ALL server sources
+# ---------------------------------------------------------------------------------------
+COPY server-1-helloworld /app/server-1-helloworld
+COPY server-2-http /app/server-2-http
+COPY server-3-Logger /app/server-3-Logger
+COPY server-4-database /app/server-4-database
+COPY server-5-epoll /app/server-5-epoll
+COPY server-6-threadpool /app/server-6-threadpool
+COPY server-7-Router /app/server-7-Router
+COPY server-8-UI /app/server-8-UI
+COPY server-9-Nginx /app/server-9-Nginx
+COPY server-10-JSON /app/server-10-JSON
+COPY server-11-LLM /app/server-11-LLM
+COPY server-12-MultiChat /app/server-12-MultiChat
+COPY server-13-KVcache /app/server-13-KVcache
+COPY server-14 /app/server-14
+COPY server14-1-Batch /app/server14-1-Batch
+
+# ---------------------------------------------------------------------------------------
+# 4. Build ALL servers
+# ---------------------------------------------------------------------------------------
+
+# Build Server 1
+RUN mkdir -p /app/server-1-helloworld/build && \
+    g++ /app/server-1-helloworld/myserver.cpp -o /app/server-1-helloworld/build/server1 -std=c++17 -O2
+
+# Build Server 2-9 (They have similar structure)
+RUN for i in $(seq 2 9); do \
+        mkdir -p /app/server-$i-*/build && \
+        g++ /app/server-$i-*/main.cpp -o /app/server-$i-*/build/server$i -std=c++17 -O2 -lpthread -lsqlite3; \
+    done
+
+# Build Server 10-JSON
+RUN mkdir -p /app/server-10-JSON/build && \
+    g++ /app/server-10-JSON/main.cpp -o /app/server-10-JSON/build/server10 -std=c++17 -O2 -lpthread -lsqlite3
+
+# Build Server 11-LLM
+RUN mkdir -p /app/server-11-LLM/build && \
+    g++ /app/server-11-LLM/main.cpp \
+        -o /app/server-11-LLM/build/server11 \
+        -I/app/server-11-LLM \
+        -I/app/third_party/llama.cpp/include \
+        -I/app/third_party/llama.cpp/ggml/include \
+        -L/app/third_party/llama.cpp/build/bin \
+        -Wl,-rpath,/app/third_party/llama.cpp/build/bin \
+        -lllama -lggml -lsqlite3 -lpthread \
+        -std=c++17 -O2
+
+# Build Server 12
+RUN cd /app/server-12-MultiChat && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build -j$(nproc)
+
+# Build Server 13
+RUN cd /app/server-13-KVcache && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build -j$(nproc)
+
+# Build Server 14
+RUN cd /app/server-14 && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build -j$(nproc)
+
+# Build Server 14-1-Batch
+RUN cd /app/server14-1-Batch && \
+    cmake -B build -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build -j$(nproc)
+
+# ---------------------------------------------------------------------------------------
+# 5. Create Unified Start Script
+# ---------------------------------------------------------------------------------------
+RUN mkdir -p /app/models
+RUN echo '#!/bin/bash\n\
+echo "================================================="\
+\
+echo "  Server 1-14 Unified Image      "\
+\
+echo "================================================="\
+\
+echo ""\
+\
+echo "Available servers:"\
+\
+echo "  server-1:  cd /app/server-1-helloworld && ./build/server1"\
+\
+echo "  server-2:  cd /app/server-2-http && ./build/server2"\
+\
+echo "  server-3:  cd /app/server-3-Logger && ./build/server3"\
+\
+echo "  server-4:  cd /app/server-4-database && ./build/server4"\
+\
+echo "  server-5:  cd /app/server-5-epoll && ./build/server5"\
+\
+echo "  server-6:  cd /app/server-6-threadpool && ./build/server6"\
+\
+echo "  server-7:  cd /app/server-7-Router && ./build/server7"\
+\
+echo "  server-8:  cd /app/server-8-UI && ./build/server8"\
+\
+echo "  server-9:  cd /app/server-9-Nginx && ./build/server9"\
+\
+echo "  server-10: cd /app/server-10-JSON && ./build/server10"\
+\
+echo "  server-11: cd /app/server-11-LLM && ./build/server11"\
+\
+echo "  server-12: cd /app/server-12-MultiChat && ./build/ai_infra_server"\
+\
+echo "  server-13: cd /app/server-13-KVcache && ./build/ai_infra_server"\
+\
+echo "  server-14: cd /app/server-14 && ./build/ai_infra_server"\
+\
+echo "  server-14-1: cd /app/server14-1-Batch && ./build/ai_infra_server"\
+\
+echo ""\
+\
+exec bash" > /app/start.sh && chmod +x /app/start.sh
+
+# ---------------------------------------------------------------------------------------
+# 6. Final Configuration
+# ---------------------------------------------------------------------------------------
+ENV MODEL_PATH=/app/models/model.gguf
+ENV N_THREADS=4
+
+EXPOSE 8080
+
+CMD ["/app/start.sh"]

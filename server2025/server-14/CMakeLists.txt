@@ -42,7 +42,7 @@ set(GGML_CPU_ALL_VARIANTS OFF CACHE BOOL "" FORCE)
 option(WITH_GPU "Enable CUDA/CUBLAS in llama.cpp" OFF)
 
 # 计算第三方源码的绝对路径
-set(LLAMA_SRC "${CMAKE_SOURCE_DIR}/third_party/llama.cpp")
+set(LLAMA_SRC "${CMAKE_SOURCE_DIR}/../third_party/llama.cpp")
 # 指定编译输出放到 build/third_party/llama.cpp
 set(LLAMA_BIN "${CMAKE_BINARY_DIR}/third_party/llama.cpp")
 

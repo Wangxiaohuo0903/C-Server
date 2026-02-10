@@ -47,9 +47,14 @@ public:
             response.setBody("Hello, World!");
             return response;
         });
-        
+
 
         router.setupDatabaseRoutes(db);
+    }
+
+    // ★ 新增：设置 RESTful API 路由
+    void setupRESTfulRoutes() {
+        router.setupRESTfulRoutes(db);
     }
 
 private:

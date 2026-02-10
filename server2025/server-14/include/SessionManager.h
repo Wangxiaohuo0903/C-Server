@@ -103,10 +103,16 @@ struct Session {
 
     // 获取最近N轮对话的上下文
     // n_turns: 轮数（1轮 = 1个用户消息 + 1个助手回复）
+    // truncated: 输出参数，表示是否截断了历史（用于KV Cache失效检测）
     // Server-14: 使用模型内置 chat template（不再手搓 prompt）
-    std::string getRecentContext(int n_turns = 5) const {
+    std::string getRecentContext(int n_turns = 5, bool* truncated = nullptr) const {
         // 计算起始索引
         int start_idx = std::max(0, (int)history.size() - n_turns * 2);
+
+        // 检测是否发生截断
+        if (truncated) {
+            *truncated = (start_idx > 0);
+        }
 
         // 转换为 applyChatTemplate 需要的格式
         std::vector<std::pair<std::string, std::string>> messages;
@@ -174,11 +180,16 @@ public:
     }
 
     /**
-     * @brief 检查会话是否存在
+     * @brief 检查会话是否存在（内存或数据库）
      */
     bool hasSession(const std::string& session_id) {
         std::lock_guard<std::mutex> lock(mutex_);
-        return sessions_.find(session_id) != sessions_.end();
+        // 先检查内存
+        if (sessions_.find(session_id) != sessions_.end()) {
+            return true;
+        }
+        // 再检查数据库
+        return db_.getChatIdForSession(session_id) >= 0;
     }
 
     /**
@@ -186,6 +197,9 @@ public:
      */
     void addUserMessage(const std::string& session_id, const std::string& content) {
         std::lock_guard<std::mutex> lock(mutex_);
+
+        // 确保会话已加载到内存
+        ensureSessionLoadedLocked(session_id);
 
         if (sessions_.find(session_id) == sessions_.end()) {
             throw std::runtime_error("Session not found: " + session_id);
@@ -211,6 +225,9 @@ public:
     void addAssistantMessage(const std::string& session_id, const std::string& content) {
         std::lock_guard<std::mutex> lock(mutex_);
 
+        // 确保会话已加载到内存
+        ensureSessionLoadedLocked(session_id);
+
         if (sessions_.find(session_id) == sessions_.end()) {
             throw std::runtime_error("Session not found: " + session_id);
         }
@@ -235,6 +252,9 @@ public:
     std::string getFullContext(const std::string& session_id) {
         std::lock_guard<std::mutex> lock(mutex_);
 
+        // 确保会话已加载到内存
+        ensureSessionLoadedLocked(session_id);
+
         if (sessions_.find(session_id) == sessions_.end()) {
             return "";
         }
@@ -246,15 +266,20 @@ public:
      * @brief 获取最近N轮对话的上下文
      * @param session_id 会话ID
      * @param n_turns 轮数（默认5轮，即5个用户消息+5个助手回复）
+     * @param truncated 输出参数，表示是否截断了历史（用于KV Cache失效检测）
      */
-    std::string getRecentContext(const std::string& session_id, int n_turns = 5) {
+    std::string getRecentContext(const std::string& session_id, int n_turns = 5, bool* truncated = nullptr) {
         std::lock_guard<std::mutex> lock(mutex_);
 
+        // 确保会话已加载到内存
+        ensureSessionLoadedLocked(session_id);
+
         if (sessions_.find(session_id) == sessions_.end()) {
+            if (truncated) *truncated = false;
             return "";
         }
 
-        return sessions_[session_id].getRecentContext(n_turns);
+        return sessions_[session_id].getRecentContext(n_turns, truncated);
     }
 
     /**
@@ -338,19 +363,38 @@ public:
     std::string getSessionHistory(const std::string& session_id) {
         std::lock_guard<std::mutex> lock(mutex_);
 
-        if (sessions_.find(session_id) == sessions_.end()) {
+        // 如果会话在内存中，从内存返回
+        if (sessions_.find(session_id) != sessions_.end()) {
+            const Session& sess = sessions_[session_id];
+            std::ostringstream json;
+            json << "[";
+            for (size_t i = 0; i < sess.history.size(); ++i) {
+                if (i > 0) json << ",";
+                json << "{"
+                     << "\"role\":\"" << sess.history[i].role << "\","
+                     << "\"content\":\"" << escapeJson(sess.history[i].content) << "\","
+                     << "\"timestamp\":" << sess.history[i].timestamp
+                     << "}";
+            }
+            json << "]";
+            return json.str();
+        }
+
+        // 会话不在内存中，从数据库加载
+        int chat_id = db_.getChatIdForSession(session_id);
+        if (chat_id < 0) {
             return "[]";
         }
 
-        const Session& sess = sessions_[session_id];
+        auto messages = db_.getMessages(chat_id);
         std::ostringstream json;
         json << "[";
-        for (size_t i = 0; i < sess.history.size(); ++i) {
+        for (size_t i = 0; i < messages.size(); ++i) {
             if (i > 0) json << ",";
             json << "{"
-                 << "\"role\":\"" << sess.history[i].role << "\","
-                 << "\"content\":\"" << escapeJson(sess.history[i].content) << "\","
-                 << "\"timestamp\":" << sess.history[i].timestamp
+                 << "\"role\":\"" << messages[i].first << "\","
+                 << "\"content\":\"" << escapeJson(messages[i].second) << "\","
+                 << "\"timestamp\":0"
                  << "}";
         }
         json << "]";
@@ -465,12 +509,19 @@ public:
                      << "\"last_active\":" << sess.last_active
                      << "}";
             } else {
-                // 否则使用数据库数据
+                // 从数据库读取消息计数（而非硬编码 0）
+                auto messages = db_.getMessages(chat.chat_id);
+                int message_count = messages.size();
+                int turn_count = 0;
+                for (const auto& [role, content] : messages) {
+                    if (role == "user") turn_count++;
+                }
+
                 json << "{"
                      << "\"session_id\":\"" << chat.session_id << "\","
                      << "\"title\":\"" << escapeJson(chat.title) << "\","
-                     << "\"message_count\":0,"
-                     << "\"turn_count\":0,"
+                     << "\"message_count\":" << message_count << ","
+                     << "\"turn_count\":" << turn_count << ","
                      << "\"last_active\":0"
                      << "}";
             }
@@ -489,11 +540,20 @@ public:
     bool verifySessionOwnership(const std::string& session_id, const std::string& username) {
         std::lock_guard<std::mutex> lock(mutex_);
 
-        if (sessionToChatId_.find(session_id) == sessionToChatId_.end()) {
+        int chat_id = -1;
+
+        // 先检查内存映射
+        if (sessionToChatId_.find(session_id) != sessionToChatId_.end()) {
+            chat_id = sessionToChatId_[session_id];
+        } else {
+            // 从数据库获取
+            chat_id = db_.getChatIdForSession(session_id);
+        }
+
+        if (chat_id < 0) {
             return false;
         }
 
-        int chat_id = sessionToChatId_[session_id];
         return db_.verifyChatOwnership(chat_id, username);
     }
 
@@ -516,6 +576,38 @@ private:
         std::stringstream ss;
         ss << "sess_" << std::hex << std::setw(8) << std::setfill('0') << rand_num;
         return ss.str();
+    }
+
+    /**
+     * @brief 确保会话已加载到内存（调用时需持有 mutex_ 锁）
+     * 如果会话在数据库中但不在内存中，则加载它
+     */
+    void ensureSessionLoadedLocked(const std::string& session_id) {
+        // 如果已在内存中，直接返回
+        if (sessions_.find(session_id) != sessions_.end()) {
+            return;
+        }
+
+        // 从数据库获取 chat_id
+        int chat_id = db_.getChatIdForSession(session_id);
+        if (chat_id < 0) {
+            return;  // 数据库中也没有，返回
+        }
+
+        // 创建会话对象
+        Session sess(session_id);
+
+        // 从数据库加载消息
+        auto messages = db_.getMessages(chat_id);
+        for (const auto& msg : messages) {
+            sess.addMessage(msg.first, msg.second);
+        }
+
+        // 存储到内存
+        sessions_[session_id] = sess;
+        sessionToChatId_[session_id] = chat_id;
+
+        std::cout << "[SessionManager] Loaded session from DB: " << session_id << " with " << messages.size() << " messages\n";
     }
 
     /**

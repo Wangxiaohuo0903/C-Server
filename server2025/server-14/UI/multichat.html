@@ -336,6 +336,7 @@
 
                 // 清空typing indicator，准备接收流式内容
                 contentDiv.innerHTML = '';
+                contentDiv.classList.remove('typing-indicator'); // 移除 typing-indicator 类
                 contentDiv.classList.add('streaming'); // 添加流式状态标记
 
                 // 解析 SSE 流 (Server-14: 支持分离的思考过程)

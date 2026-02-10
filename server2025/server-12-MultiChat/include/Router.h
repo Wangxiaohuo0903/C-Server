@@ -364,47 +364,14 @@ inline void Router::setupSessionRoutes(SessionManager& sm, ModelManager& mm) {
                 try { temperature = std::stof(js["temperature"]); } catch (...) { }
             }
 
-            // 1. 添加用户消息到会话历史
-            sm.addUserMessage(session_id, user_message);
+            // 1. 调用 ModelManager 的多轮对话接口，它会处理所有事情
+            //    - 添加用户消息
+            //    - 调用 getFullContext() (我们已修改为使用模板)
+            //    - 执行推理
+            //    - 添加助手消息
+            std::string assistant_reply = mm.infer(session_id, user_message, maxTokens, temperature);
 
-            // 2. 获取上下文（最近5轮对话）
-            std::string context = sm.getRecentContext(session_id, 5);
-
-            // 3. 调用模型生成回复（使用SessionManager的上下文）
-            // 构造完整prompt: 上下文 + 当前用户消息
-            std::string full_prompt = context;
-            if (!context.empty() && context.back() != '\n') full_prompt += "\n";
-            full_prompt += "User: " + user_message + "\nAssistant: ";
-
-            // 直接调用raw_infer，不使用ModelManager内部的chat_sessions
-            std::string assistant_reply = mm.raw_infer(full_prompt, maxTokens, temperature);
-              // 移除模型生成的假对话（防止模型继续生成User:/Assistant:)
-            size_t user_pos = assistant_reply.find("\nUser:");
-            size_t assistant_pos = assistant_reply.find("\nAssistant:");
-            size_t cut_pos = std::string::npos;
-
-            if (user_pos != std::string::npos && assistant_pos != std::string::npos) {
-                cut_pos = std::min(user_pos, assistant_pos);
-            } else if (user_pos != std::string::npos) {
-                cut_pos = user_pos;
-            } else if (assistant_pos != std::string::npos) {
-                cut_pos = assistant_pos;
-            }
-
-            if (cut_pos != std::string::npos) {
-                assistant_reply = assistant_reply.substr(0, cut_pos);
-            }
-
-            // 去除首尾空白
-            auto trim = [](std::string& s) {
-                s.erase(0, s.find_first_not_of(" \t\n\r"));
-                s.erase(s.find_last_not_of(" \t\n\r") + 1);
-            };
-            trim(assistant_reply);
-            // 4. 添加助手回复到会话历史
-            sm.addAssistantMessage(session_id, assistant_reply);
-
-            // 5. 返回结果
+            // 2. 返回结果
             HttpResponse resp(200);
             resp.setHeader("Content-Type", "application/json");
             std::ostringstream json_resp;

@@ -146,11 +146,6 @@ inline std::string cleanModelOutput(std::string text) {
     text.erase(0, text.find_first_not_of(" \t\n\r"));
     text.erase(text.find_last_not_of(" \t\n\r") + 1);
 
-    // If result is empty or just whitespace, return a friendly message
-    if (text.empty() || text.find_first_not_of(" \t\n\r") == std::string::npos) {
-        return "你好！我是 AI 助手，有什么可以帮到你的吗？";
-    }
-
     return text;
 }
 
@@ -369,7 +364,15 @@ inline void Router::setupSessionRoutes(SessionManager& sm, ModelManagerV2& mm) {
             sm.addUserMessage(session_id, user_message);
 
             // 2. Get full conversation history to build the prompt
-            std::string full_prompt = sm.getRecentContext(session_id, 20);
+            bool history_truncated = false;
+            std::string full_prompt = sm.getRecentContext(session_id, 20, &history_truncated);
+
+            // 2.1 If history was truncated, clear KV cache to avoid mismatch
+            if (history_truncated) {
+                std::cerr << "[Router] History truncated for session " << session_id
+                          << ", clearing KV cache to prevent token mismatch\n";
+                mm.deleteSession(session_id);
+            }
 
             // 3. Call ModelManagerV2 with cache enabled
             std::string assistant_reply = mm.inferWithCache(session_id, full_prompt, maxTokens, temperature);
@@ -456,7 +459,15 @@ inline void Router::setupSessionRoutes(SessionManager& sm, ModelManagerV2& mm) {
             sm.addUserMessage(session_id, user_message);
 
             // 2. Get conversation context
-            std::string full_prompt = sm.getRecentContext(session_id, 20);
+            bool history_truncated = false;
+            std::string full_prompt = sm.getRecentContext(session_id, 20, &history_truncated);
+
+            // 2.1 If history was truncated, clear KV cache to avoid mismatch
+            if (history_truncated) {
+                std::cerr << "[Router] History truncated for session " << session_id
+                          << ", clearing KV cache to prevent token mismatch\n";
+                mm.deleteSession(session_id);
+            }
 
             // 3. Stream inference - collect all SSE events with thinking detection
             std::ostringstream sse_stream;

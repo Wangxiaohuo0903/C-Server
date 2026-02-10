@@ -1,0 +1,139 @@
+# Server2025 统一 Docker Compose 配置
+# 使用方法: docker compose -f docker-compose.all.yml up -d
+#
+# 端口分配:
+#   - server-12-MultiChat:  6060 (基础多轮对话)
+#   - server-13-KVcache:    6061 (KV缓存优化)
+#   - server-14:            6062 (用户认证版本)
+#   - server14-1-Batch:     6063 (批处理优化)
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Server-12: 基础多轮对话服务器
+  # ============================================
+  server12:
+    build:
+      context: ./server-12-MultiChat
+      dockerfile: Dockerfile
+    image: server12:latest
+    container_name: server12_multichat
+    ports:
+      - "6060:8080"
+    volumes:
+      - ./DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_L.gguf:/app/models/model.gguf:ro
+      - ./server-12-MultiChat/UI:/app/UI:ro
+    environment:
+      - MODEL_PATH=/app/models/model.gguf
+      - N_THREADS=4
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================
+  # Server-13: KV Cache 优化版本 (性能提升5-10倍)
+  # ============================================
+  server13:
+    build:
+      context: ./server-13-KVcache
+      dockerfile: Dockerfile
+    image: server13:latest
+    container_name: server13_kvcache
+    ports:
+      - "6061:8080"
+    volumes:
+      - ./DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_L.gguf:/app/models/model.gguf:ro
+      - ./server-13-KVcache/UI:/app/UI:ro
+    environment:
+      - MODEL_PATH=/app/models/model.gguf
+      - N_THREADS=4
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================
+  # Server-14: 用户认证版本
+  # ============================================
+  server14:
+    build:
+      context: ./server-14
+      dockerfile: Dockerfile
+    image: server14:latest
+    container_name: server14_authenticated
+    ports:
+      - "6062:8080"
+    volumes:
+      - ./DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_L.gguf:/app/models/model.gguf:ro
+      - ./server-14/UI:/app/UI:ro
+      - ./server-14/users.db:/app/users.db
+    environment:
+      - MODEL_PATH=/app/models/model.gguf
+      - N_THREADS=4
+      - ENABLE_BATCH=false
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================
+  # Server-14-Batch: 批处理优化版本
+  # ============================================
+  server14-batch:
+    build:
+      context: ./server14-1-Batch
+      dockerfile: Dockerfile
+    image: server14-batch:latest
+    container_name: server14_batch
+    ports:
+      - "6063:8080"
+    volumes:
+      - ./DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_L.gguf:/app/models/model.gguf:ro
+      - ./server14-1-Batch/UI:/app/UI:ro
+    environment:
+      - MODEL_PATH=/app/models/model.gguf
+      - N_THREADS=4
+      - BATCH_SIZE=4
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# 网络配置 (可选)
+networks:
+  default:
+    name: server2025_network

@@ -1,0 +1,16 @@
+# 测试 Dockerfile - 将模型文件直接嵌入镜像
+# 目的：测试能否绕过 macOS Docker 虚拟化层的挂载问题
+
+FROM juanbing/ai-server2026:latest
+
+# 复制模型文件到镜像内部（从build context）
+COPY tinyllama-q4.gguf /app/models/tinyllama-q4.gguf
+
+# 设置环境变量指向内部模型
+ENV MODEL_PATH=/app/models/tinyllama-q4.gguf
+
+# 设置库路径
+ENV LD_LIBRARY_PATH=/app/server-11/third_party/llama.cpp/build/bin:${LD_LIBRARY_PATH}
+
+# 默认运行 server-13
+CMD ["/app/server-13-kvcache/server13-kvcache"]

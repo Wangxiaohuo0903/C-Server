@@ -1,0 +1,10 @@
+    g++ main.cpp \
+        -o build/ai_infra_server_11 \
+        -I/app/server-11-LLM \
+        -I/app/third_party/llama.cpp/include \
+        -I/app/third_party/llama.cpp/ggml/include \
+        -L/app/third_party/llama.cpp/build/bin \
+        -Wl,-rpath,/app/third_party/llama.cpp/build/bin \
+        -lllama -lggml -lsqlite3 -lpthread \
+        -std=c++17 -O2
+
